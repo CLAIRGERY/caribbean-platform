@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: caribbean-postgis
+    environment:
+      POSTGRES_USER: caribbean
+      POSTGRES_PASSWORD: caribbean
+      POSTGRES_DB: caribbean_platform
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caribbean"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: caribbean-api
+    environment:
+      DATABASE_URL: postgresql+psycopg2://caribbean:caribbean@db:5432/caribbean_platform
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

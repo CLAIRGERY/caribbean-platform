@@ -1,0 +1,33 @@
+[Unit]
+Description=SaKgaZé FastAPI backend (uvicorn)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=sakgaze
+Group=sakgaze
+WorkingDirectory=/opt/sakgaze
+Environment=PYTHONPATH=/opt/sakgaze
+Environment=DATABASE_URL=postgresql+psycopg2://sakgaze:<DB_PASSWORD>@127.0.0.1:5433/sakgaze
+ExecStart=/opt/sakgaze/.venv/bin/uvicorn backend.src.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info
+Restart=always
+RestartSec=5s
+StandardOutput=append:/var/log/sakgaze/backend.log
+StandardError=append:/var/log/sakgaze/backend.log
+SyslogIdentifier=sakgaze-backend
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log/sakgaze /opt/sakgaze/outputs
+ReadOnlyPaths=/opt/sakgaze
+
+[Install]
+WantedBy=multi-user.target

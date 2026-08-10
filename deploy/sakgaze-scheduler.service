@@ -1,0 +1,28 @@
+[Unit]
+Description=SaKgaZé satellite data pipeline scheduler
+After=network.target sakgaze-backend.service
+Wants=sakgaze-backend.service
+
+[Service]
+Type=oneshot
+User=sakgaze
+Group=sakgaze
+WorkingDirectory=/opt/sakgaze
+Environment=PYTHONPATH=/opt/sakgaze
+ExecStart=/opt/sakgaze/.venv/bin/python -m sakgaze.src.pipeline
+ExecStartPost=/opt/sakgaze/.venv/bin/python -m weathernext.src.pipeline
+ExecStartPost=/opt/sakgaze/.venv/bin/python -m drift.src.engine
+StandardOutput=append:/var/log/sakgaze/scheduler.log
+StandardError=append:/var/log/sakgaze/scheduler.log
+SyslogIdentifier=sakgaze-scheduler
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log/sakgaze /opt/sakgaze/outputs
+ReadOnlyPaths=/opt/sakgaze
+
+[Install]
+WantedBy=multi-user.target
