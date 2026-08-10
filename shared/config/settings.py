@@ -34,7 +34,7 @@ POSTGRES_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
 POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5433"))
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}",
+    "postgresql://postgres.ikcnfepzaegadbwasnvv:[VOTRE_MOT_DE_PASSE]@aws-0-eu-west-3.pooler.supabase.com:6543/postgres",
 )
 SYNC_DATABASE_URL = DATABASE_URL
 
