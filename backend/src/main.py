@@ -1,6 +1,7 @@
 """
 FastAPI backend for SaKgaZé & Weathernext ingestion and map read APIs.
 """
+import os
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
@@ -33,10 +34,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — autorise le frontend (port 3000) et les outils de dev
+# CORS — autorise le frontend (port 3000), Render, et production domains
+origins = os.getenv("CORS_ORIGINS", "http://127.0.0.1:3000,http://localhost:3000").split(",")
+origins = [o.strip() for o in origins if o.strip()]
+# Always allow Render preview URLs (*.onrender.com)
+origins.append("https://*.onrender.com")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:3000", "http://localhost:3000", "*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

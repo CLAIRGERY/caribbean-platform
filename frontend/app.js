@@ -2,7 +2,9 @@
  * SaKgaZé — Prévision des échouages de sargasses Caraïbes
  * Esri Satellite basemap, neon-lime sargassum, drift vectors
  */
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://127.0.0.1:8000/api/v1'
+  : 'https://sakgaze-api.onrender.com/api/v1';
 const CENTER = [-61.5, 15.5];
 const ZOOM = 7;
 
@@ -68,7 +70,7 @@ function n(val, dec) { return val != null ? Number(val).toFixed(dec||1) : '—';
    API
    ========================================================================== */
 async function fetchGeoJSON(path) {
-  const resp = await fetch(`${API_BASE}${path}`);
+  const resp = await fetch(`${API_BASE_URL}${path}`);
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const data = await resp.json();
   return data?.features ? data : { type:'FeatureCollection', features:[] };
@@ -76,9 +78,9 @@ async function fetchGeoJSON(path) {
 
 async function chargerDonnees() {
   const [sak, drift, wx] = await Promise.allSettled([
-    fetchGeoJSON('/api/v1/sakgaze/detections/latest'),
-    fetchGeoJSON('/api/v1/sakgaze/drift-predictions/latest'),
-    fetchGeoJSON('/api/v1/weathernext/marine-alerts/latest'),
+    fetchGeoJSON('/sakgaze/detections/latest'),
+    fetchGeoJSON('/sakgaze/drift-predictions/latest'),
+    fetchGeoJSON('/weathernext/marine-alerts/latest'),
   ]);
   sargassumData = sak.status    === 'fulfilled' ? sak.value    : { type:'FeatureCollection', features:[] };
   driftData     = drift.status  === 'fulfilled' ? drift.value  : { type:'FeatureCollection', features:[] };
