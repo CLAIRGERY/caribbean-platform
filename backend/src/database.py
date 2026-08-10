@@ -10,7 +10,12 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, 
 from sqlalchemy.orm import declarative_base, sessionmaker
 from geoalchemy2 import Geometry
 
-from shared.config.settings import DATABASE_URL
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+if not DATABASE_URL:
+    # Fallback : conserver la compatibilité avec shared.config.settings
+    from shared.config.settings import DATABASE_URL as _FALLBACK_URL
+    DATABASE_URL = _FALLBACK_URL
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
