@@ -17,6 +17,15 @@ if not DATABASE_URL:
     from shared.config.settings import DATABASE_URL as _FALLBACK_URL
     DATABASE_URL = _FALLBACK_URL
 
+# Auto-rewrite old direct Supabase IPv6 URLs → IPv4 pooler
+if "db.ikcnfepzaegadbwasnvv.supabase.co:5432" in DATABASE_URL:
+    import logging
+    logging.getLogger("sakgaze").warning("Rewriting DATABASE_URL from direct supabase.co:5432 → pooler.supabase.com:6543")
+    DATABASE_URL = DATABASE_URL.replace(
+        "db.ikcnfepzaegadbwasnvv.supabase.co:5432",
+        "aws-0-eu-west-3.pooler.supabase.com:6543"
+    )
+
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
