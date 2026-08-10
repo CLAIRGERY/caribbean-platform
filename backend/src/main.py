@@ -34,14 +34,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — autorise le frontend (port 3000), Render, et production domains
-origins = os.getenv("CORS_ORIGINS", "http://127.0.0.1:3000,http://localhost:3000").split(",")
-origins = [o.strip() for o in origins if o.strip()]
-# Always allow Render preview URLs (*.onrender.com)
-origins.append("https://*.onrender.com")
+# CORS — autorise sakgaze.com, le dev local et les sous-domaines Render
+default_origins = "https://sakgaze.com,https://www.sakgaze.com,http://127.0.0.1:3000,http://localhost:3000"
+raw_origins = os.getenv("CORS_ORIGINS", default_origins).split(",")
+origins = [o.strip().rstrip("/") for o in raw_origins if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
