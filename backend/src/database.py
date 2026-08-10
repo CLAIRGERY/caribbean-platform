@@ -17,7 +17,7 @@ if not DATABASE_URL:
     from shared.config.settings import DATABASE_URL as _FALLBACK_URL
     DATABASE_URL = _FALLBACK_URL
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
