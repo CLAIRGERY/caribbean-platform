@@ -5,7 +5,6 @@ Supports PostGIS geometry columns and async/sync operations.
 import os
 from datetime import datetime
 from typing import Generator
-from urllib.parse import urlsplit, urlunsplit
 
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -14,44 +13,9 @@ from geoalchemy2 import Geometry
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 if not DATABASE_URL:
-    # Fallback : conserver la compatibilité avec shared.config.settings
+    # Fallback : conserver la compatibilité avec shared.config.settings (dev local)
     from shared.config.settings import DATABASE_URL as _FALLBACK_URL
     DATABASE_URL = _FALLBACK_URL
-
-
-def _normalize_supabase_url(url: str) -> str:
-    """Ensure Supabase URLs connect via the IPv4 transaction pooler with a
-    tenant-qualified username (``postgres.<project_ref>``).
-
-    Supabase's shared pooler routes connections by tenant, which it derives
-    from the username prefix. A bare ``postgres`` username therefore fails
-    with ``ENOIDENTIFIER: no tenant identifier provided``. This normalizer
-    rebuilds the URL so that:
-      * host -> aws-0-eu-west-3.pooler.supabase.com:6543 (IPv4, no IPv6 needed)
-      * username -> postgres.ikcnfepzaegadbwasnvv
-    The password and database name are preserved from the original URL.
-    """
-    if "supabase" not in url:
-        return url
-    try:
-        parts = urlsplit(url)
-        password = parts.password or ""
-        path = parts.path or "/postgres"
-        ref = "ikcnfepzaegadbwasnvv"
-        netloc = f"postgres.{ref}:{password}@aws-0-eu-west-3.pooler.supabase.com:6543"
-        return urlunsplit((parts.scheme, netloc, path, parts.query, parts.fragment))
-    except Exception:
-        return url
-
-
-if "supabase" in DATABASE_URL:
-    normalized = _normalize_supabase_url(DATABASE_URL)
-    if normalized != DATABASE_URL:
-        import logging
-        logging.getLogger("sakgaze").warning(
-            "Normalized DATABASE_URL to Supabase IPv4 pooler with tenant-qualified username."
-        )
-        DATABASE_URL = normalized
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
