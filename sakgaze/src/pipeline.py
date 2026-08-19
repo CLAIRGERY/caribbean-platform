@@ -297,7 +297,7 @@ def vectorize_mask(mask_arr: np.ndarray, profile: Dict[str, Any], acquisition_da
                 "surface_km2": round(float(area_km2), 6),
                 "density_score": round(float(density_score), 4),
                 "density_level": density_level,
-                "acquisition_date": acquisition_date.isoformat() + "Z",
+                "acquisition_date": acquisition_date.isoformat().replace("+00:00", "Z"),
                 "source_satellite": "S2",
             },
         })
