@@ -21,6 +21,7 @@ import numpy as np
 import rasterio
 from rasterio.mask import mask
 from rasterio.windows import from_bounds
+from rasterio.warp import transform_bounds
 from rasterio.features import shapes
 from shapely.geometry import shape, mapping, Polygon
 from shapely.ops import unary_union
@@ -174,7 +175,11 @@ def read_band_window(url: str, bbox: Tuple[float, float, float, float], token: s
     try:
         with rasterio.Env(**env_opts):
             with rasterio.open(url, "r") as src:
-                window = from_bounds(*bbox, transform=src.transform)
+                # Reproject the WGS84 bbox into the COG's native CRS (Sentinel-2
+                # COGs are UTM) before computing the read window; a no-op if the
+                # COG is already EPSG:4326.
+                win_bbox = transform_bounds("EPSG:4326", src.crs, *bbox)
+                window = from_bounds(*win_bbox, transform=src.transform)
                 window = window.round_lengths().round_offsets()
                 arr = src.read(1, window=window)
                 profile = src.profile.copy()
