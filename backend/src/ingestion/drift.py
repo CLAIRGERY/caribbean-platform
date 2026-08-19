@@ -24,13 +24,76 @@ from shapely.geometry import LineString, Polygon, mapping, shape
 from backend.src.ingestion import common
 from backend.src.ingestion.marine_alerts import (
     COASTAL_SECTORS,
-    _fetch_marine_summary,
-    _fetch_wind_summary,
+    OPEN_METEO_FORECAST_URL,
+    OPEN_METEO_MARINE_URL,
+    _max,
+    _mean,
     _sector_polygon,
 )
 
 R_EARTH_M = 6_371_000.0
 HORIZONS_HOURS = [24, 48, 72]
+
+
+def _fetch_marine_batch(coords: List[Tuple[float, float]]) -> List[Dict[str, Optional[float]]]:
+    """One Open-Meteo Marine call for many coordinates → per-location summaries."""
+    if not coords:
+        return []
+    data = common.fetch_json(
+        OPEN_METEO_MARINE_URL,
+        params={
+            "latitude": ",".join(f"{c[0]}" for c in coords),
+            "longitude": ",".join(f"{c[1]}" for c in coords),
+            "hourly": "wave_height,wave_period,ocean_current_velocity,ocean_current_direction",
+            "forecast_days": 3,
+            "timezone": "UTC",
+        },
+    )
+    locs = data if isinstance(data, list) else [data]
+    out: List[Dict[str, Optional[float]]] = []
+    for d in locs:
+        hourly = d.get("hourly", {})
+        out.append({
+            "wave_height_m": _max(hourly.get("wave_height")),
+            "wave_period_s": _max(hourly.get("wave_period")),
+            "current_speed_kmh": _mean(hourly.get("ocean_current_velocity")),
+            "current_direction_deg": _mean(hourly.get("ocean_current_direction")),
+        })
+    while len(out) < len(coords):
+        out.append({"wave_height_m": None, "wave_period_s": None,
+                    "current_speed_kmh": None, "current_direction_deg": None})
+    return out[: len(coords)]
+
+
+def _fetch_wind_batch(coords: List[Tuple[float, float]]) -> List[Dict[str, Optional[float]]]:
+    """One Open-Meteo Forecast call for many coordinates → per-location summaries."""
+    if not coords:
+        return []
+    data = common.fetch_json(
+        OPEN_METEO_FORECAST_URL,
+        params={
+            "latitude": ",".join(f"{c[0]}" for c in coords),
+            "longitude": ",".join(f"{c[1]}" for c in coords),
+            "hourly": "wind_speed_10m,wind_gusts_10m,wind_direction_10m",
+            "forecast_days": 3,
+            "timezone": "UTC",
+        },
+    )
+    locs = data if isinstance(data, list) else [data]
+    out: List[Dict[str, Optional[float]]] = []
+    for d in locs:
+        hourly = d.get("hourly", {})
+        speed_kmh = _max(hourly.get("wind_speed_10m"))
+        gust_kmh = _max(hourly.get("wind_gusts_10m"))
+        out.append({
+            "wind_speed_knots": speed_kmh * 0.539957 if speed_kmh else None,
+            "gust_speed_knots": gust_kmh * 0.539957 if gust_kmh else None,
+            "wind_direction_deg": _mean(hourly.get("wind_direction_10m")),
+        })
+    while len(out) < len(coords):
+        out.append({"wind_speed_knots": None, "gust_speed_knots": None,
+                    "wind_direction_deg": None})
+    return out[: len(coords)]
 
 
 def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
@@ -59,7 +122,8 @@ def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -
             n_loaded, max_seeds,
         )
 
-    features: List[Dict[str, Any]] = []
+    # Build seed list (centroid lon/lat + properties).
+    seeds: List[Tuple[float, float, Dict[str, Any]]] = []
     for det in detections:
         geom = det.get("geometry")
         if not isinstance(geom, dict):
@@ -69,12 +133,23 @@ def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -
         except Exception:  # noqa: BLE001
             continue
         centroid = g.centroid
-        lon0, lat0 = centroid.x, centroid.y
+        seeds.append((centroid.x, centroid.y, det.get("properties", {})))
 
-        props = det.get("properties", {})
+    if not seeds:
+        return []
+
+    # Batch-fetch environmental vectors (2 API calls total for all seeds).
+    coords = [(s[0], s[1]) for s in seeds]
+    try:
+        marine_list = _fetch_marine_batch(coords)
+        wind_list = _fetch_wind_batch(coords)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[DRIFT] Environmental batch fetch failed: %s", exc)
+        return []
+
+    features: List[Dict[str, Any]] = []
+    for (lon0, lat0, props), marine, wind in zip(seeds, marine_list, wind_list):
         try:
-            marine = _fetch_marine_summary(lat0, lon0)
-            wind = _fetch_wind_summary(lat0, lon0)
             u, v = _drift_velocity(wind, marine)
         except Exception as exc:  # noqa: BLE001
             logger.warning("[DRIFT] No environmental vector for (%.2f, %.2f): %s", lon0, lat0, exc)
