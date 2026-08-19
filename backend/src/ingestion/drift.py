@@ -43,6 +43,22 @@ def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -
         logger.warning("[DRIFT] No sargassum detections available — cannot advect.")
         return []
 
+    # Cap seed detections so Open-Meteo API call volume stays bounded. A single
+    # 1414-patch scene would otherwise issue ~2 HTTP calls per seed and blow the
+    # workflow timeout. Advect the largest patches first (most impactful).
+    n_loaded = len(detections)
+    max_seeds = int(os.getenv("DRIFT_MAX_SEEDS", "100"))
+    if n_loaded > max_seeds:
+        detections = sorted(
+            detections,
+            key=lambda d: float((d.get("properties") or {}).get("surface_km2") or 0.0),
+            reverse=True,
+        )[:max_seeds]
+        logger.info(
+            "[DRIFT] %d detections loaded; advecting top %d by surface area",
+            n_loaded, max_seeds,
+        )
+
     features: List[Dict[str, Any]] = []
     for det in detections:
         geom = det.get("geometry")
