@@ -1,0 +1,56 @@
+name: SaKgaZé Ingestion
+
+on:
+  schedule:
+    # Sargassum + drift: every 6 hours (Sentinel-2 revisit + forecast cadence)
+    - cron: "0 */6 * * *"
+    # Marine alerts: every 3 hours (NOAA NHC + Open-Meteo update cadence)
+    - cron: "15 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Collector to run"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - sargassum
+          - drift
+          - marine-alerts
+
+concurrency:
+  group: sakgaze-ingestion
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run ingestion
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CDSE_USERNAME: ${{ secrets.CDSE_USERNAME }}
+          CDSE_PASSWORD: ${{ secrets.CDSE_PASSWORD }}
+        run: |
+          python -m backend.src.ingestion.runner --source ${{ github.event.inputs.source || 'all' }}

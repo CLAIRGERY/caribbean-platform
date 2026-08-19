@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>SaKgaZé — Prévision des échouages de sargasses Caraïbes</title>
   <link rel="icon" type="image/png" href="assets/logo-sakgaze.png" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,6 +28,7 @@
   <!-- ================================================================== -->
   <!-- COLLAPSIBLE LEFT SIDEBAR PANEL                                       -->
   <!-- ================================================================== -->
+  <div id="panel-backdrop" class="panel-backdrop"></div>
   <div id="sidebar-panel" class="panel-open">
     <!-- Toggle tab (visible when collapsed) -->
     <button id="panel-toggle" class="panel-toggle-btn" title="Afficher le panneau">
@@ -120,6 +121,7 @@
   <!-- ================================================================== -->
   <div id="brand-card" class="fixed top-6 left-6 z-30 flex items-center gap-3 px-3 py-2 rounded-xl border shadow-2xl"
        style="background:rgba(15,23,42,0.88);backdrop-filter:blur(14px);border-color:rgba(171,71,188,0.25);transition:left 0.35s ease">
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Ouvrir le panneau" aria-controls="sidebar-panel" aria-expanded="false">☰</button>
     <img src="assets/logo-sakgaze.png" alt="SaKgaZé" class="w-9 h-9 rounded-full object-cover ring-2 ring-[#AB47BC]/40" />
     <div>
       <h1 class="text-sm font-bold text-[#F4EFEA] leading-tight tracking-tight">SaKgaZé</h1>

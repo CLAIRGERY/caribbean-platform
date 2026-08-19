@@ -34,7 +34,7 @@ POSTGRES_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
 POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5433"))
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://postgres.ikcnfepzaegadbwasnvv:***@aws-0-eu-west-3.pooler.supabase.com:6543/postgres",
+    f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}",
 )
 SYNC_DATABASE_URL = DATABASE_URL
 
@@ -60,10 +60,21 @@ OPEN_METEO_WEATHER_URL = os.getenv("OPEN_METEO_WEATHER_URL", "https://api.open-m
 # Processing knobs
 # ---------------------------------------------------------------------------
 S2_MAX_CLOUD_COVER = float(os.getenv("S2_MAX_CLOUD_COVER", "20"))
-S2_COLLECTION = os.getenv("S2_COLLECTION", "SENTINEL-2")
+S2_COLLECTION = os.getenv("S2_COLLECTION", "sentinel-2-l2a")
 S2_PRODUCT_TYPE = os.getenv("S2_PRODUCT_TYPE", "S2MSI2A")
 FAI_THRESHOLD = float(os.getenv("FAI_THRESHOLD", "0.008"))
 MIN_PATCH_AREA_KM2 = float(os.getenv("MIN_PATCH_AREA_KM2", "0.01"))
+
+# ---------------------------------------------------------------------------
+# Ingestion layer
+# ---------------------------------------------------------------------------
+INGESTION_REQUEST_TIMEOUT = float(os.getenv("INGESTION_REQUEST_TIMEOUT", "30"))
+INGESTION_MAX_RETRIES = int(os.getenv("INGESTION_MAX_RETRIES", "3"))
+INGESTION_BACKOFF_BASE = float(os.getenv("INGESTION_BACKOFF_BASE", "2.0"))
+INGESTION_USER_AGENT = os.getenv(
+    "INGESTION_USER_AGENT", "SaKgaZe-Ingestion/1.0 (+https://sakgaze.com)"
+)
+SARGASSUM_LOOKBACK_DAYS = int(os.getenv("SARGASSUM_LOOKBACK_DAYS", "30"))
 
 # ---------------------------------------------------------------------------
 # Resilience

@@ -19,6 +19,7 @@ from backend.src.crud import (
     get_latest_sargassum,
     get_latest_marine_alerts,
     get_latest_drift_predictions,
+    get_ingestion_status,
 )
 
 
@@ -34,7 +35,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 # ---------------------------------------------------------------------------
 # CORS
 # ---------------------------------------------------------------------------
@@ -46,6 +46,7 @@ default_origins = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://*.onrender.com",
 ]
 
 cors_env = os.getenv("CORS_ORIGINS", "")
@@ -81,11 +82,24 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 @app.get("/health")
-def health() -> Dict[str, str]:
+def health(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    db_ok = "ok"
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+    except Exception:
+        db_ok = "error"
     return {
-        "status": "ok",
+        "status": "ok" if db_ok == "ok" else "degraded",
         "service": "sakgaze-api",
+        "database": db_ok,
     }
+
+
+@app.get("/api/v1/ingestion/status")
+def ingestion_status(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Read-only ingestion status for the three collectors."""
+    return get_ingestion_status(db)
 
 
 # ---------------------------------------------------------------------------

@@ -47,6 +47,27 @@ def init_db() -> None:
         conn.commit()
     Base.metadata.create_all(bind=engine)
     _create_spatial_indexes()
+    _apply_migrations()
+
+
+def _apply_migrations() -> None:
+    """Idempotent column migrations for pre-existing production tables."""
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE sargassum_detections ADD COLUMN IF NOT EXISTS external_id VARCHAR(64);",
+        "ALTER TABLE sargassum_detections ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'cdse_sentinel2';",
+        "ALTER TABLE drift_predictions ADD COLUMN IF NOT EXISTS external_id VARCHAR(64);",
+        "ALTER TABLE drift_predictions ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'drift_engine';",
+        "ALTER TABLE marine_alerts ADD COLUMN IF NOT EXISTS external_id VARCHAR(64);",
+        "ALTER TABLE marine_alerts ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'noaa_nhc_openmeteo';",
+        "CREATE INDEX IF NOT EXISTS idx_sargassum_external_id ON sargassum_detections (external_id);",
+        "CREATE INDEX IF NOT EXISTS idx_drift_external_id ON drift_predictions (external_id);",
+        "CREATE INDEX IF NOT EXISTS idx_alerts_external_id ON marine_alerts (external_id);",
+    ]
+    with engine.connect() as conn:
+        for stmt in migrations:
+            conn.execute(text(stmt))
+        conn.commit()
 
 
 def _create_spatial_indexes() -> None:
@@ -71,6 +92,8 @@ def _create_spatial_indexes() -> None:
 class SargassumDetection(Base):
     __tablename__ = "sargassum_detections"
     id = Column(Integer, primary_key=True, index=True)
+    external_id = Column(String(64), index=True, nullable=True)
+    source = Column(String(50), default="cdse_sentinel2")
     acquisition_date = Column(DateTime, index=True, nullable=False)
     surface_km2 = Column(Float, nullable=False)
     density_score = Column(Float, nullable=False)
@@ -84,6 +107,8 @@ class SargassumDetection(Base):
 class DriftPrediction(Base):
     __tablename__ = "drift_predictions"
     id = Column(Integer, primary_key=True, index=True)
+    external_id = Column(String(64), index=True, nullable=True)
+    source = Column(String(50), default="drift_engine")
     prediction_horizon_days = Column(Integer, nullable=False)
     eta_hours = Column(Float, nullable=False)
     landing_probability_pct = Column(Float, nullable=False)
@@ -96,6 +121,8 @@ class DriftPrediction(Base):
 class MarineAlert(Base):
     __tablename__ = "marine_alerts"
     id = Column(Integer, primary_key=True, index=True)
+    external_id = Column(String(64), index=True, nullable=True)
+    source = Column(String(50), default="noaa_nhc_openmeteo")
     alert_type = Column(String(30), index=True, nullable=False)
     alert_level = Column(String(10), nullable=False)
     sector = Column(String(50), index=True, nullable=True)
@@ -109,3 +136,18 @@ class MarineAlert(Base):
     geometry = Column(Geometry("GEOMETRY", srid=4326), nullable=True)
     properties = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class IngestionRun(Base):
+    __tablename__ = "ingestion_runs"
+    id = Column(Integer, primary_key=True, index=True)
+    source = Column(String(30), index=True, nullable=False)
+    status = Column(String(12), nullable=False)  # success | partial | failed
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    finished_at = Column(DateTime, nullable=True)
+    records_downloaded = Column(Integer, default=0)
+    records_inserted = Column(Integer, default=0)
+    records_skipped = Column(Integer, default=0)
+    records_rejected = Column(Integer, default=0)
+    latest_data_timestamp = Column(DateTime, nullable=True)
+    error = Column(Text, nullable=True)

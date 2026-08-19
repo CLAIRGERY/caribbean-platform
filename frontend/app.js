@@ -302,14 +302,72 @@ function afficherInspecteur(props) {
 }
 
 /* ==========================================================================
-   Panel Toggle
+   Panel Toggle (responsive)
    ========================================================================== */
 const panel = document.getElementById('sidebar-panel');
 const toggleIcon = document.getElementById('panel-toggle-icon');
+const backdrop = document.getElementById('panel-backdrop');
+const menuBtn = document.getElementById('mobile-menu-btn');
+
+const MOBILE_BREAKPOINT = 767;
+const TABLET_BREAKPOINT = 1023;
+const isDrawerMode = () => window.innerWidth <= TABLET_BREAKPOINT;
+
+function mapResize() {
+  // MapLibre: inform the map the container size changed (sidebar drawer).
+  try { map.resize(); } catch (e) { /* map not ready yet */ }
+}
+
+function setPanelOpen(open) {
+  panel.classList.toggle('panel-open', open);
+  panel.classList.toggle('panel-closed', !open);
+  toggleIcon.textContent = open ? '◀' : '▶';
+  if (menuBtn) menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (!isDrawerMode()) {
+    backdrop.classList.remove('panel-backdrop-visible');
+  } else {
+    backdrop.classList.toggle('panel-backdrop-visible', open);
+  }
+  // Map must re-layout after the transition finishes (drawer overlays the map,
+  // but desktop brand-card shift / any width change needs a resize).
+  setTimeout(mapResize, 320);
+}
+
 document.getElementById('panel-toggle').addEventListener('click', () => {
-  const closed = panel.classList.toggle('panel-closed');
-  toggleIcon.textContent = closed ? '▶' : '◀';
-  panel.classList.toggle('panel-open', !closed);
+  const closed = panel.classList.contains('panel-closed');
+  setPanelOpen(closed);
+  if (!isDrawerMode()) localStorage.setItem('sakgaze-panel', closed ? 'open' : 'closed');
+});
+
+if (menuBtn) {
+  menuBtn.addEventListener('click', () => setPanelOpen(true));
+}
+
+if (backdrop) {
+  backdrop.addEventListener('click', () => setPanelOpen(false));
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && isDrawerMode() && panel.classList.contains('panel-open')) {
+    setPanelOpen(false);
+  }
+});
+
+// Initial state: mobile/tablet start closed; desktop honors localStorage.
+(function initPanelState() {
+  if (isDrawerMode()) {
+    setPanelOpen(false);
+  } else {
+    const saved = localStorage.getItem('sakgaze-panel');
+    setPanelOpen(saved !== 'closed');
+  }
+})();
+
+window.addEventListener('resize', () => {
+  if (isDrawerMode() && panel.classList.contains('panel-open')) {
+    // Keep drawer closed by default when shrinking into mobile.
+    if (window.innerWidth <= MOBILE_BREAKPOINT) setPanelOpen(false);
+  }
 });
 
 /* ==========================================================================

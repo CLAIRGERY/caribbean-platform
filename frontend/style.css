@@ -11,11 +11,18 @@
   --glass-border:  rgba(171, 71, 188, 0.20);
   --cream:         #F8FAFC;
   --beige:         #94A3B8;
-  --panel-w:       340px;
+  --panel-w:       clamp(280px, 25vw, 360px);
 }
 
 * { scrollbar-width: thin; scrollbar-color: rgba(171,71,188,0.25) #0F172A; }
 #map { width: 100%; height: 100%; cursor: grab; }
+
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+body { position: relative; }
 
 /* ---- Popups ---- */
 .maplibregl-popup { max-width: 280px !important; }
@@ -161,3 +168,114 @@
   color: rgba(148,163,184,0.50) !important; font-size: 9px !important;
 }
 .maplibregl-ctrl-attrib a { color: rgba(148,163,184,0.50) !important; }
+
+/* ==========================================================================
+   RESPONSIVE — mobile menu button + drawer backdrop
+   ========================================================================== */
+.mobile-menu-btn {
+  display: none;  /* desktop: hidden, collapse tab handles it */
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 10px; border: 1px solid var(--glass-border);
+  background: rgba(171,71,188,0.08); color: var(--purple-light);
+  font-size: 18px; line-height: 1; cursor: pointer;
+  align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-menu-btn:hover { background: rgba(171,71,188,0.18); }
+
+.panel-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 34;
+  background: rgba(4, 8, 16, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0; transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   TABLET (768–1023px): overlay drawer, collapsed by default
+   ========================================================================== */
+@media (max-width: 1023px) {
+  :root { --panel-w: min(320px, 80vw); }
+
+  .mobile-menu-btn { display: flex; }
+
+  /* Panel becomes an off-canvas drawer */
+  #sidebar-panel {
+    top: 10px; left: 10px;
+    width: var(--panel-w);
+    height: calc(100vh - 20px);
+    transform: translateX(calc(-100% - 24px));
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+  }
+  #sidebar-panel.panel-open {
+    transform: translateX(0);
+  }
+  #sidebar-panel.panel-closed {
+    transform: translateX(calc(-100% - 24px));
+  }
+  /* Hide the desktop edge toggle tab in drawer mode */
+  #sidebar-panel .panel-toggle-btn { display: none; }
+
+  /* Brand card always stays at top-left (no offset for panel) */
+  #sidebar-panel.panel-open ~ #brand-card { left: 16px; }
+  #sidebar-panel.panel-closed ~ #brand-card { left: 16px; }
+
+  .panel-backdrop.panel-backdrop-visible {
+    display: block; opacity: 1; pointer-events: auto;
+  }
+}
+
+/* ==========================================================================
+   MOBILE (<768px): full-bleed map, bottom-sheet-friendly drawer
+   ========================================================================== */
+@media (max-width: 767px) {
+  :root { --panel-w: min(300px, 86vw); }
+
+  #sidebar-panel {
+    top: env(safe-area-inset-top, 0);
+    left: 0;
+    height: 100vh;
+    height: calc(100vh - env(safe-area-inset-bottom, 0px));
+    border-radius: 0 14px 14px 0;
+    border-left: none;
+    transform: translateX(-100%);
+  }
+  #sidebar-panel.panel-open { transform: translateX(0); }
+  #sidebar-panel.panel-closed { transform: translateX(-100%); }
+
+  /* Brand card: compact */
+  #brand-card { top: calc(8px + env(safe-area-inset-top, 0px)); left: 8px; padding: 6px 10px; }
+  #brand-card img { width: 32px; height: 32px; }
+
+  /* Layer pills: compact, top-right */
+  #layer-pills { top: calc(8px + env(safe-area-inset-top, 0px)); right: 8px; }
+  #layer-pills .pill-label { font-size: 11px; }
+  #layer-pills .layer-pill { padding: 7px 10px; }
+
+  /* Timeline: full-width bottom bar, no fixed min-width */
+  #timeline-bar {
+    left: 8px; right: 8px; transform: none;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    min-width: 0; width: auto;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  #timeline-bar #timeline-label { display: none; }
+  #timeline-ticks { font-size: 9px; }
+  #timeline-ticks span { white-space: nowrap; }
+
+  /* Touch targets ≥ 44px */
+  .timeline-btn { width: 44px; height: 44px; }
+  .panel-toggle-btn { width: 44px; height: 44px; }
+}
+
+/* ==========================================================================
+   LANDSCAPE MOBILE: narrow height, keep timeline + map usable
+   ========================================================================== */
+@media (max-height: 480px) and (orientation: landscape) {
+  #sidebar-panel { height: 100vh; top: 0; border-radius: 0; }
+  #timeline-bar { bottom: 4px; padding: 6px 10px; }
+}
+
