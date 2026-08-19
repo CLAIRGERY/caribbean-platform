@@ -34,66 +34,123 @@ from backend.src.ingestion.marine_alerts import (
 R_EARTH_M = 6_371_000.0
 HORIZONS_HOURS = [24, 48, 72]
 
+# Max coordinates per Open-Meteo batch request. Full-precision floats (15-17
+# decimals) inflate the URL and Open-Meteo returns HTTP 400; 40 coords × 4
+# decimals keeps each request well within URL limits.
+OPEN_METEO_BATCH_SIZE = 40
 
-def _fetch_marine_batch(coords: List[Tuple[float, float]]) -> List[Dict[str, Optional[float]]]:
-    """One Open-Meteo Marine call for many coordinates → per-location summaries."""
+
+def _fmt_coord(value: float) -> str:
+    """Format a coordinate to 4 decimals (≈11 m) — plenty for drift seeding."""
+    return f"{value:.4f}"
+
+
+def _iter_chunks(items, size: int):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]
+
+
+def _marine_summary(hourly: Dict[str, Any]) -> Dict[str, Optional[float]]:
+    return {
+        "wave_height_m": _max(hourly.get("wave_height")),
+        "wave_period_s": _max(hourly.get("wave_period")),
+        "current_speed_kmh": _mean(hourly.get("ocean_current_velocity")),
+        "current_direction_deg": _mean(hourly.get("ocean_current_direction")),
+    }
+
+
+def _wind_summary(hourly: Dict[str, Any]) -> Dict[str, Optional[float]]:
+    speed_kmh = _max(hourly.get("wind_speed_10m"))
+    gust_kmh = _max(hourly.get("wind_gusts_10m"))
+    return {
+        "wind_speed_knots": speed_kmh * 0.539957 if speed_kmh else None,
+        "gust_speed_knots": gust_kmh * 0.539957 if gust_kmh else None,
+        "wind_direction_deg": _mean(hourly.get("wind_direction_10m")),
+    }
+
+
+def _fetch_marine_batch(coords: List[Tuple[float, float]]) -> List[Optional[Dict[str, Optional[float]]]]:
+    """Fetch marine summaries for many coordinates, chunked to bound URL size.
+
+    Returns one entry per input coordinate, in the SAME order. A coordinate
+    whose chunk failed is represented as ``None`` (the caller skips it);
+    successful chunks are never discarded.
+    """
     if not coords:
         return []
-    data = common.fetch_json(
-        OPEN_METEO_MARINE_URL,
-        params={
-            "latitude": ",".join(f"{c[0]}" for c in coords),
-            "longitude": ",".join(f"{c[1]}" for c in coords),
-            "hourly": "wave_height,wave_period,ocean_current_velocity,ocean_current_direction",
-            "forecast_days": 3,
-            "timezone": "UTC",
-        },
-    )
-    locs = data if isinstance(data, list) else [data]
-    out: List[Dict[str, Optional[float]]] = []
-    for d in locs:
-        hourly = d.get("hourly", {})
-        out.append({
-            "wave_height_m": _max(hourly.get("wave_height")),
-            "wave_period_s": _max(hourly.get("wave_period")),
-            "current_speed_kmh": _mean(hourly.get("ocean_current_velocity")),
-            "current_direction_deg": _mean(hourly.get("ocean_current_direction")),
-        })
-    while len(out) < len(coords):
-        out.append({"wave_height_m": None, "wave_period_s": None,
-                    "current_speed_kmh": None, "current_direction_deg": None})
-    return out[: len(coords)]
+    out: List[Optional[Dict[str, Optional[float]]]] = [None] * len(coords)
+    n_chunks = (len(coords) + OPEN_METEO_BATCH_SIZE - 1) // OPEN_METEO_BATCH_SIZE
+    ok = 0
+    for chunk_idx, chunk in enumerate(_iter_chunks(coords, OPEN_METEO_BATCH_SIZE)):
+        lats = ",".join(_fmt_coord(c[0]) for c in chunk)
+        lons = ",".join(_fmt_coord(c[1]) for c in chunk)
+        try:
+            data = common.fetch_json(
+                OPEN_METEO_MARINE_URL,
+                params={
+                    "latitude": lats,
+                    "longitude": lons,
+                    "hourly": "wave_height,wave_period,ocean_current_velocity,ocean_current_direction",
+                    "forecast_days": 3,
+                    "timezone": "UTC",
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            common.logger.warning(
+                "[DRIFT] marine batch %d/%d failed: %s", chunk_idx + 1, n_chunks, exc,
+            )
+            continue
+        locs = data if isinstance(data, list) else [data]
+        base = chunk_idx * OPEN_METEO_BATCH_SIZE
+        for j, d in enumerate(locs):
+            idx = base + j
+            if idx >= len(coords):
+                break
+            out[idx] = _marine_summary(d.get("hourly", {}))
+        ok += 1
+    common.logger.info("[DRIFT] marine batches: %d/%d ok", ok, n_chunks)
+    return out
 
 
-def _fetch_wind_batch(coords: List[Tuple[float, float]]) -> List[Dict[str, Optional[float]]]:
-    """One Open-Meteo Forecast call for many coordinates → per-location summaries."""
+def _fetch_wind_batch(coords: List[Tuple[float, float]]) -> List[Optional[Dict[str, Optional[float]]]]:
+    """Fetch wind summaries for many coordinates, chunked to bound URL size.
+
+    Same ordering and partial-failure semantics as ``_fetch_marine_batch``.
+    """
     if not coords:
         return []
-    data = common.fetch_json(
-        OPEN_METEO_FORECAST_URL,
-        params={
-            "latitude": ",".join(f"{c[0]}" for c in coords),
-            "longitude": ",".join(f"{c[1]}" for c in coords),
-            "hourly": "wind_speed_10m,wind_gusts_10m,wind_direction_10m",
-            "forecast_days": 3,
-            "timezone": "UTC",
-        },
-    )
-    locs = data if isinstance(data, list) else [data]
-    out: List[Dict[str, Optional[float]]] = []
-    for d in locs:
-        hourly = d.get("hourly", {})
-        speed_kmh = _max(hourly.get("wind_speed_10m"))
-        gust_kmh = _max(hourly.get("wind_gusts_10m"))
-        out.append({
-            "wind_speed_knots": speed_kmh * 0.539957 if speed_kmh else None,
-            "gust_speed_knots": gust_kmh * 0.539957 if gust_kmh else None,
-            "wind_direction_deg": _mean(hourly.get("wind_direction_10m")),
-        })
-    while len(out) < len(coords):
-        out.append({"wind_speed_knots": None, "gust_speed_knots": None,
-                    "wind_direction_deg": None})
-    return out[: len(coords)]
+    out: List[Optional[Dict[str, Optional[float]]]] = [None] * len(coords)
+    n_chunks = (len(coords) + OPEN_METEO_BATCH_SIZE - 1) // OPEN_METEO_BATCH_SIZE
+    ok = 0
+    for chunk_idx, chunk in enumerate(_iter_chunks(coords, OPEN_METEO_BATCH_SIZE)):
+        lats = ",".join(_fmt_coord(c[0]) for c in chunk)
+        lons = ",".join(_fmt_coord(c[1]) for c in chunk)
+        try:
+            data = common.fetch_json(
+                OPEN_METEO_FORECAST_URL,
+                params={
+                    "latitude": lats,
+                    "longitude": lons,
+                    "hourly": "wind_speed_10m,wind_gusts_10m,wind_direction_10m",
+                    "forecast_days": 3,
+                    "timezone": "UTC",
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            common.logger.warning(
+                "[DRIFT] wind batch %d/%d failed: %s", chunk_idx + 1, n_chunks, exc,
+            )
+            continue
+        locs = data if isinstance(data, list) else [data]
+        base = chunk_idx * OPEN_METEO_BATCH_SIZE
+        for j, d in enumerate(locs):
+            idx = base + j
+            if idx >= len(coords):
+                break
+            out[idx] = _wind_summary(d.get("hourly", {}))
+        ok += 1
+    common.logger.info("[DRIFT] wind batches: %d/%d ok", ok, n_chunks)
+    return out
 
 
 def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
@@ -138,8 +195,9 @@ def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -
     if not seeds:
         return []
 
-    # Batch-fetch environmental vectors (2 API calls total for all seeds).
-    coords = [(s[0], s[1]) for s in seeds]
+    # Batch-fetch environmental vectors. The batch helpers expect (lat, lon)
+    # tuples (Open-Meteo convention), but `seeds` stores (lon, lat, props).
+    coords = [(s[1], s[0]) for s in seeds]
     try:
         marine_list = _fetch_marine_batch(coords)
         wind_list = _fetch_wind_batch(coords)
@@ -149,6 +207,12 @@ def fetch_drift_predictions(detections: Optional[List[Dict[str, Any]]] = None) -
 
     features: List[Dict[str, Any]] = []
     for (lon0, lat0, props), marine, wind in zip(seeds, marine_list, wind_list):
+        if marine is None or wind is None:
+            logger.warning(
+                "[DRIFT] No environmental vector for (%.2f, %.2f): batch fetch failed",
+                lon0, lat0,
+            )
+            continue
         try:
             u, v = _drift_velocity(wind, marine)
         except Exception as exc:  # noqa: BLE001
