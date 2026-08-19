@@ -3,6 +3,7 @@ SQLAlchemy + GeoAlchemy2 database setup for the Caribbean platform.
 Supports PostGIS geometry columns and async/sync operations.
 """
 import os
+import re
 from datetime import datetime
 from typing import Generator
 
@@ -16,6 +17,43 @@ if not DATABASE_URL:
     # Fallback : conserver la compatibilité avec shared.config.settings (dev local)
     from shared.config.settings import DATABASE_URL as _FALLBACK_URL
     DATABASE_URL = _FALLBACK_URL
+
+
+# Supabase direct connections resolve to IPv6-only (db.<ref>.supabase.co:5432).
+# GitHub Actions / Render runners have no IPv6, so the direct URL fails with
+# "Network is unreachable". The shared pooler (Supavisor) is IPv4-only and
+# identifies the tenant via the username prefix "postgres.<ref>".
+# This rewrites a direct Supabase URL to the pooler while preserving the
+# password byte-for-byte (no urlsplit round-trip that could corrupt it).
+_SUPABASE_DIRECT_RE = re.compile(
+    r'^(?P<scheme>postgres(?:ql)?(?:\+psycopg2)?://)'
+    r'postgres(?:\.[a-z0-9]{20})?'
+    r'(?P<creds>:[^@]*)'
+    r'@db\.(?P<ref>[a-z0-9]{20})\.supabase\.co:5432'
+    r'(?P<rest>/.*)?$'
+)
+
+
+def _supabase_pooler_url(url: str, region: str = "eu-west-3") -> str:
+    """Convert a Supabase direct-connection URL to the IPv4 pooler URL."""
+    m = _SUPABASE_DIRECT_RE.match(url)
+    if not m:
+        return url
+    scheme = m.group("scheme")
+    ref = m.group("ref")
+    creds = m.group("creds")
+    rest = m.group("rest") or "/postgres"
+    return f"{scheme}postgres.{ref}{creds}@aws-0-{region}.pooler.supabase.com:6543{rest}"
+
+
+if "supabase.co" in DATABASE_URL and "pooler.supabase.com" not in DATABASE_URL:
+    _converted = _supabase_pooler_url(DATABASE_URL)
+    if _converted != DATABASE_URL:
+        import logging
+        logging.getLogger("sakgaze").warning(
+            "Rewrote DATABASE_URL from direct Supabase IPv6 host to IPv4 pooler."
+        )
+        DATABASE_URL = _converted
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
