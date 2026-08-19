@@ -47,6 +47,13 @@ CDSE_STAC_URL = os.getenv("CDSE_STAC_URL", "https://catalogue.dataspace.copernic
 CDSE_ODATA_URL = os.getenv("CDSE_ODATA_URL", "https://catalogue.dataspace.copernicus.eu/odata/v1")
 CDSE_USERNAME = os.getenv("CDSE_USERNAME", "")
 CDSE_PASSWORD = os.getenv("CDSE_PASSWORD", "")
+# CDSE S3 object storage (Sentinel-2 COGs are served from s3://eodata/...).
+# Credentials are generated in the CDSE dashboard (My Account → S3 access).
+CDSE_S3_ACCESS_KEY = os.getenv("CDSE_S3_ACCESS_KEY", "")
+CDSE_S3_SECRET_KEY = os.getenv("CDSE_S3_SECRET_KEY", "")
+CDSE_S3_ENDPOINT = os.getenv(
+    "CDSE_S3_ENDPOINT", "eodata.dataspace.copernicus.eu"
+)
 
 # ---------------------------------------------------------------------------
 # Data sources

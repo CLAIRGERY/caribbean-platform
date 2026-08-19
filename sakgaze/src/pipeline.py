@@ -40,6 +40,9 @@ from shared.config.settings import (
     CDSE_STAC_URL,
     CDSE_USERNAME,
     CDSE_PASSWORD,
+    CDSE_S3_ACCESS_KEY,
+    CDSE_S3_SECRET_KEY,
+    CDSE_S3_ENDPOINT,
     S2_MAX_CLOUD_COVER,
     S2_PRODUCT_TYPE,
     FAI_THRESHOLD,
@@ -135,22 +138,58 @@ def get_band_url(item: Dict[str, Any], band: str) -> Optional[str]:
 
 @retry_on_exception()
 def read_band_window(url: str, bbox: Tuple[float, float, float, float], token: str = "") -> Tuple[np.ndarray, Dict[str, Any]]:
-    """Stream a windowed COG band inside the AOI bbox."""
-    headers = {}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    with rasterio.Env(GDAL_HTTP_HEADERS=json.dumps(headers)):
-        with rasterio.open(url, "r") as src:
-            window = from_bounds(*bbox, transform=src.transform)
-            window = window.round_lengths().round_offsets()
-            arr = src.read(1, window=window)
-            profile = src.profile.copy()
-            profile.update({
-                "height": window.height,
-                "width": window.width,
-                "transform": rasterio.windows.transform(window, src.transform),
-            })
-            return arr, profile
+    """Stream a windowed COG band inside the AOI bbox.
+
+    Supports HTTPS assets (Bearer token via GDAL_HTTP_HEADERS) and CDSE
+    ``s3://eodata/...`` assets. For S3, GDAL's /vsis3/ driver reads the AWS_*
+    settings from the process environment (rasterio.Env refuses AWS_* config
+    options and routes them through boto3, which is not available here), so we
+    set them as environment variables scoped to this call.
+    """
+    env_opts: Dict[str, Any] = {}
+    s3_env_backup: Dict[str, Optional[str]] = {}
+    if url.startswith("s3://"):
+        if not (CDSE_S3_ACCESS_KEY and CDSE_S3_SECRET_KEY):
+            raise RuntimeError(
+                "CDSE S3 credentials (CDSE_S3_ACCESS_KEY/CDSE_S3_SECRET_KEY) "
+                "are required to read s3:// band assets"
+            )
+        s3_settings = {
+            "AWS_ACCESS_KEY_ID": CDSE_S3_ACCESS_KEY,
+            "AWS_SECRET_ACCESS_KEY": CDSE_S3_SECRET_KEY,
+            "AWS_S3_ENDPOINT": CDSE_S3_ENDPOINT,
+            "AWS_HTTPS": "YES",
+            "AWS_VIRTUAL_HOSTING": "FALSE",
+        }
+        for key, val in s3_settings.items():
+            s3_env_backup[key] = os.environ.get(key)
+            os.environ[key] = val
+    else:
+        headers = {}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        if headers:
+            env_opts["GDAL_HTTP_HEADERS"] = json.dumps(headers)
+
+    try:
+        with rasterio.Env(**env_opts):
+            with rasterio.open(url, "r") as src:
+                window = from_bounds(*bbox, transform=src.transform)
+                window = window.round_lengths().round_offsets()
+                arr = src.read(1, window=window)
+                profile = src.profile.copy()
+                profile.update({
+                    "height": window.height,
+                    "width": window.width,
+                    "transform": rasterio.windows.transform(window, src.transform),
+                })
+                return arr, profile
+    finally:
+        for key, val in s3_env_backup.items():
+            if val is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = val
 
 
 # ---------------------------------------------------------------------------

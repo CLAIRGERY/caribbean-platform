@@ -27,6 +27,8 @@ CDSE_AUTH_URL = os.getenv(
 CDSE_CLIENT_ID = os.getenv("CDSE_CLIENT_ID", "cdse-public")
 CDSE_USERNAME = os.getenv("CDSE_USERNAME", "")
 CDSE_PASSWORD = os.getenv("CDSE_PASSWORD", "")
+CDSE_S3_ACCESS_KEY = os.getenv("CDSE_S3_ACCESS_KEY", "")
+CDSE_S3_SECRET_KEY = os.getenv("CDSE_S3_SECRET_KEY", "")
 
 # AOI: Caribbean Basin & Lesser Antilles
 AOI_BBOX = (-89.0, 7.0, -59.0, 27.0)
@@ -57,6 +59,14 @@ def fetch_sargassum_detections() -> List[Dict[str, Any]]:
         logger.warning(
             "[SARGASSUM] CDSE credentials not configured — cannot stream bands "
             "or compute FAI. Returning empty result (no synthetic fallback)."
+        )
+        return []
+
+    if not (CDSE_S3_ACCESS_KEY and CDSE_S3_SECRET_KEY):
+        logger.warning(
+            "[SARGASSUM] CDSE S3 credentials (CDSE_S3_ACCESS_KEY/"
+            "CDSE_S3_SECRET_KEY) not configured — cannot stream s3:// band "
+            "assets. Returning empty result (no synthetic fallback)."
         )
         return []
 
