@@ -118,6 +118,38 @@ def _get_band_url(item: Dict[str, Any], band: str) -> Optional[str]:
     return None
 
 
+def _resample_bands_to(ref, ref_profile, bands):
+    """Resample bands to the reference band's grid.
+
+    ``ref`` and each band are windowed reads of the same Sentinel-2 scene, but
+    their native resolutions can differ (B11 SWIR is 20 m while B04/B08 are
+    10 m). When a band's shape differs from ``ref`` it is resampled to the
+    reference grid so FAI/ML operate on a common array shape.
+
+    Returns ``(ref, *resampled_bands)``.
+    """
+    import numpy as np
+    from rasterio.warp import reproject, Resampling
+
+    out = [ref]
+    for arr, prof in bands:
+        if arr.shape == ref.shape:
+            out.append(arr)
+            continue
+        resampled = np.empty(ref.shape, dtype="float32")
+        reproject(
+            source=arr,
+            destination=resampled,
+            src_transform=prof["transform"],
+            src_crs=prof["crs"],
+            dst_transform=ref_profile["transform"],
+            dst_crs=ref_profile["crs"],
+            resampling=Resampling.bilinear,
+        )
+        out.append(resampled)
+    return tuple(out)
+
+
 def _process_scene(item: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Stream B04/B08/B11, compute FAI, filter, vectorize. Reuses pipeline logic."""
     try:
@@ -151,11 +183,17 @@ def _process_scene(item: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     try:
         red, profile = read_band_window(red_url, bbox, token)
-        nir, _ = read_band_window(nir_url, bbox, token)
-        swir, _ = read_band_window(swir_url, bbox, token)
+        nir, nir_profile = read_band_window(nir_url, bbox, token)
+        swir, swir_profile = read_band_window(swir_url, bbox, token)
     except Exception as exc:  # noqa: BLE001
         common.logger.warning("[SARGASSUM] Band streaming failed: %s", exc)
         return []
+
+    # Align all bands to the red (10 m) grid — B11 SWIR is 20 m native.
+    red, nir, swir = _resample_bands_to(red, profile, [
+        (nir, nir_profile),
+        (swir, swir_profile),
+    ])
 
     red = red.astype(float) * 1e-4
     nir = nir.astype(float) * 1e-4
