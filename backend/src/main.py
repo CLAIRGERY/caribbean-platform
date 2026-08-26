@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy.orm import Session
 
 from backend.src.database import init_db, get_db
@@ -75,6 +76,9 @@ app.add_middleware(
     ],
     allow_headers=["*"],
 )
+
+# Compress GeoJSON responses (they gzip ~10x, easing Render free-tier bandwidth).
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # ---------------------------------------------------------------------------
@@ -155,6 +159,7 @@ def post_alerts(
 @app.get("/api/v1/sakgaze/detections/latest")
 def get_detections_latest(
     days: int = 7,
+    limit: int = 2000,
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
 
@@ -163,16 +168,23 @@ def get_detections_latest(
             status_code=400,
             detail="days must be between 1 and 90",
         )
+    if not 1 <= limit <= 10000:
+        raise HTTPException(
+            status_code=400,
+            detail="limit must be between 1 and 10000",
+        )
 
     return get_latest_sargassum(
         db,
         days=days,
+        max_features=limit,
     )
 
 
 @app.get("/api/v1/weathernext/marine-alerts/latest")
 def get_alerts_latest(
     days: int = 7,
+    limit: int = 1000,
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
 
@@ -181,16 +193,23 @@ def get_alerts_latest(
             status_code=400,
             detail="days must be between 1 and 90",
         )
+    if not 1 <= limit <= 10000:
+        raise HTTPException(
+            status_code=400,
+            detail="limit must be between 1 and 10000",
+        )
 
     return get_latest_marine_alerts(
         db,
         days=days,
+        max_features=limit,
     )
 
 
 @app.get("/api/v1/sakgaze/drift-predictions/latest")
 def get_drift_latest(
     days: int = 7,
+    limit: int = 1500,
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
 
@@ -199,8 +218,14 @@ def get_drift_latest(
             status_code=400,
             detail="days must be between 1 and 90",
         )
+    if not 1 <= limit <= 10000:
+        raise HTTPException(
+            status_code=400,
+            detail="limit must be between 1 and 10000",
+        )
 
     return get_latest_drift_predictions(
         db,
         days=days,
+        max_features=limit,
     )

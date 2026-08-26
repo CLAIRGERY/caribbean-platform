@@ -142,46 +142,56 @@ def ingest_marine_alerts(db: Session, fc: Dict[str, Any]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Read (ST_AsGeoJSON optimized)
 # ---------------------------------------------------------------------------
-def get_latest_sargassum(db: Session, days: int = 7) -> Dict[str, Any]:
+# API output geometry is simplified + precision-capped so GeoJSON responses stay
+# small enough for the Render free-tier worker. The raw PostGIS geometries are
+# huge (raster-vectorized sargassum polygons; drift accumulates per forecast run).
+# 0.0002° ≈ 22 m at 15°N; 6 decimals ≈ 0.1 m — both ample for a map display.
+_GEOM_SELECT = (
+    "ST_AsGeoJSON(ST_SimplifyPreserveTopology(geometry, 0.0002), 6)::json "
+    "AS geom_geojson"
+)
+
+
+def get_latest_sargassum(db: Session, days: int = 7, max_features: int = 2000) -> Dict[str, Any]:
     since = datetime.utcnow() - timedelta(days=days)
     sql = text(
         "SELECT id, acquisition_date, surface_km2, density_score, density_level, "
-        "source_satellite, properties, ST_AsGeoJSON(geometry)::json AS geom_geojson "
-        "FROM sargassum_detections WHERE acquisition_date >= :since "
-        "ORDER BY acquisition_date DESC"
+        "source_satellite, properties, " + _GEOM_SELECT +
+        " FROM sargassum_detections WHERE acquisition_date >= :since "
+        "ORDER BY acquisition_date DESC LIMIT :max_features"
     )
-    rows = db.execute(sql, {"since": since}).mappings().all()
+    rows = db.execute(sql, {"since": since, "max_features": max_features}).mappings().all()
     return {
         "type": "FeatureCollection",
         "features": [_feature_from_row(r) for r in rows if r["geom_geojson"]],
     }
 
 
-def get_latest_marine_alerts(db: Session, days: int = 7) -> Dict[str, Any]:
+def get_latest_marine_alerts(db: Session, days: int = 7, max_features: int = 1000) -> Dict[str, Any]:
     since = datetime.utcnow() - timedelta(days=days)
     sql = text(
         "SELECT id, alert_type, alert_level, sector, event_name, wind_speed_knots, "
         "gust_speed_knots, wave_height_m, wave_period_s, h2s_risk, issued_at, "
-        "properties, ST_AsGeoJSON(geometry)::json AS geom_geojson "
-        "FROM marine_alerts WHERE issued_at >= :since "
-        "ORDER BY issued_at DESC"
+        "properties, " + _GEOM_SELECT +
+        " FROM marine_alerts WHERE issued_at >= :since "
+        "ORDER BY issued_at DESC LIMIT :max_features"
     )
-    rows = db.execute(sql, {"since": since}).mappings().all()
+    rows = db.execute(sql, {"since": since, "max_features": max_features}).mappings().all()
     return {
         "type": "FeatureCollection",
         "features": [_feature_from_row(r) for r in rows if r["geom_geojson"]],
     }
 
 
-def get_latest_drift_predictions(db: Session, days: int = 7) -> Dict[str, Any]:
+def get_latest_drift_predictions(db: Session, days: int = 7, max_features: int = 1500) -> Dict[str, Any]:
     since = datetime.utcnow() - timedelta(days=days)
     sql = text(
         "SELECT id, prediction_horizon_days, eta_hours, landing_probability_pct, "
-        "target_sector, properties, created_at, ST_AsGeoJSON(geometry)::json AS geom_geojson "
-        "FROM drift_predictions WHERE created_at >= :since "
-        "ORDER BY created_at DESC"
+        "target_sector, properties, created_at, " + _GEOM_SELECT +
+        " FROM drift_predictions WHERE created_at >= :since "
+        "ORDER BY created_at DESC LIMIT :max_features"
     )
-    rows = db.execute(sql, {"since": since}).mappings().all()
+    rows = db.execute(sql, {"since": since, "max_features": max_features}).mappings().all()
     return {
         "type": "FeatureCollection",
         "features": [_feature_from_row(r) for r in rows if r["geom_geojson"]],
