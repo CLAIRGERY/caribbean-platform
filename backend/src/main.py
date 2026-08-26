@@ -159,7 +159,7 @@ def post_alerts(
 @app.get("/api/v1/sakgaze/detections/latest")
 def get_detections_latest(
     days: int = 7,
-    limit: int = 2000,
+    limit: int = 1000,
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
 

@@ -145,20 +145,21 @@ def ingest_marine_alerts(db: Session, fc: Dict[str, Any]) -> Dict[str, Any]:
 # API output geometry is simplified + precision-capped so GeoJSON responses stay
 # small enough for the Render free-tier worker. The raw PostGIS geometries are
 # huge (raster-vectorized sargassum polygons; drift accumulates per forecast run).
-# 0.0002° ≈ 22 m at 15°N; 6 decimals ≈ 0.1 m — both ample for a map display.
+# 0.0005° ≈ 55 m at 15°N; 6 decimals ≈ 0.1 m — both ample for a map display.
 _GEOM_SELECT = (
-    "ST_AsGeoJSON(ST_SimplifyPreserveTopology(geometry, 0.0002), 6)::json "
+    "ST_AsGeoJSON(ST_SimplifyPreserveTopology(geometry, 0.0005), 6)::json "
     "AS geom_geojson"
 )
 
 
-def get_latest_sargassum(db: Session, days: int = 7, max_features: int = 2000) -> Dict[str, Any]:
+def get_latest_sargassum(db: Session, days: int = 7, max_features: int = 1000) -> Dict[str, Any]:
     since = datetime.utcnow() - timedelta(days=days)
     sql = text(
         "SELECT id, acquisition_date, surface_km2, density_score, density_level, "
         "source_satellite, properties, " + _GEOM_SELECT +
         " FROM sargassum_detections WHERE acquisition_date >= :since "
-        "ORDER BY acquisition_date DESC LIMIT :max_features"
+        "ORDER BY acquisition_date DESC, surface_km2 DESC NULLS LAST "
+        "LIMIT :max_features"
     )
     rows = db.execute(sql, {"since": since, "max_features": max_features}).mappings().all()
     return {
