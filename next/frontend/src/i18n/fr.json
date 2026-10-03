@@ -1,0 +1,106 @@
+{
+  "app": {
+    "brand": {
+      "title": "SaKgaZe",
+      "subtitle": "Intelligence sargasses - Caraibes"
+    },
+    "status": {
+      "live": "En direct",
+      "connecting": "Connexion aux donnees...",
+      "waking": "Le service se reveille. Nouvelle tentative en cours.",
+      "unavailable": "Service temporairement indisponible",
+      "retry": "Reessayer",
+      "freshness": "Fraicheur des donnees",
+      "lastIngestion": "Derniere ingestion",
+      "never": "Jamais"
+    },
+    "layers": {
+      "sargassum": "Sargasses",
+      "drift": "Derive",
+      "marine": "Alertes cotieres",
+      "satellite": "Satellite",
+      "oceanFlow": "Mode Flux Oceanique",
+      "show": "Afficher",
+      "hide": "Masquer",
+      "layersTitle": "Couches"
+    },
+    "timeline": {
+      "title": "Chronologie",
+      "now": "Maintenant",
+      "observation": "Observation",
+      "forecast": "Prevision",
+      "latestAcquisition": "Derniere acquisition",
+      "reset": "Reinitialiser",
+      "filterActive": "Filtre temporel actif",
+      "hiddenByFilter": "L'affichage est masque par le filtre temporel.",
+      "showAll": "Tout afficher"
+    },
+    "inspector": {
+      "title": "Inspecteur",
+      "empty": "Cliquez sur un secteur ou un banc de sargasses pour afficher les metriques.",
+      "surface": "Surface",
+      "density": "Densite",
+      "acquisitionDate": "Date d'acquisition",
+      "horizon": "Horizon",
+      "source": "Source",
+      "alertLevel": "Niveau d'alerte",
+      "sector": "Secteur",
+      "wind": "Vent",
+      "swell": "Houle",
+      "eta": "ETA",
+      "close": "Fermer l'inspecteur"
+    },
+    "alerts": {
+      "level": {
+        "advisory": "Vigilance",
+        "watch": "Avis",
+        "warning": "Alerte",
+        "smallcraft": "Petites embarcations"
+      }
+    },
+    "empty": {
+      "noObservations": "Aucune observation recente",
+      "waitingIngestion": "En attente de la premiere ingestion",
+      "willAppear": "Les donnees apparaitront automatiquement apres synchronisation.",
+      "noDrift": "Aucune prediction de derive disponible",
+      "noAlerts": "Aucune alerte cotiere active"
+    },
+    "errors": {
+      "sargassum": "Impossible de charger la couche Sargasses",
+      "drift": "Impossible de charger la couche Derive",
+      "marine": "Impossible de charger la couche Alertes cotieres",
+      "layerFailedRetrying": "Nouvelle tentative...",
+      "retryOnce": "Reessayer"
+    },
+    "loading": {
+      "initializing": "Initialisation de la carte...",
+      "mapReady": "Carte prete",
+      "layerLoading": "Chargement de la couche..."
+    },
+    "oceanFlow": {
+      "enable": "Activer le Flux Oceanique",
+      "disable": "Desactiver le Flux Oceanique",
+      "loading": "Chargement du Flux Oceanique...",
+      "failed": "Flux Oceanique indisponible sur cet appareil"
+    },
+    "map": {
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arriere",
+      "resetNorth": "Reorienter vers le nord",
+      "attribution": "Attribution"
+    },
+    "a11y": {
+      "menu": "Menu",
+      "language": "Langue",
+      "languageSwitch": "Changer de langue",
+      "close": "Fermer",
+      "open": "Ouvrir",
+      "layers": "Couches de donnees",
+      "main": "Contenu principal"
+    },
+    "footer": {
+      "apiBase": "Source des donnees",
+      "render": "Serveur de donnees"
+    }
+  }
+}

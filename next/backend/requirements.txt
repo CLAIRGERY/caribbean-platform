@@ -1,0 +1,8 @@
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.39
+geoalchemy2==0.16.0
+psycopg2-binary==2.9.10
+alembic==1.15.1
+pydantic==2.10.6
+httpx==0.28.1

@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Ensure the app shell always fills the viewport so MapLibre never ends up
+   with zero height (prevents the html/body height collapse regression).
+   --------------------------------------------------------------------------- */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--sak-abyss, #04122a);
+  color: #e7eef7;
+  font-family: Inter, system-ui, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Main application stage: always at least the dynamic viewport height. */
+.sak-stage {
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+}
+
+/* Floating glass surfaces */
+.sak-glass {
+  background: linear-gradient(160deg, rgba(10, 30, 63, 0.72), rgba(4, 18, 42, 0.78));
+  border: 1px solid rgba(103, 232, 249, 0.16);
+  border-radius: 16px;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    0 10px 40px rgba(2, 8, 20, 0.55),
+    inset 0 1px 0 rgba(148, 233, 255, 0.12);
+}
+
+.sak-glass--strong {
+  background: linear-gradient(160deg, rgba(14, 42, 77, 0.85), rgba(4, 18, 42, 0.9));
+}
+
+/* Thin luminous border used by layer pills / buttons */
+.sak-luminous-border {
+  position: relative;
+}
+.sak-luminous-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, rgba(103, 232, 249, 0.5), rgba(125, 226, 195, 0.35), rgba(139, 124, 246, 0.4));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Focus visibility for keyboard users */
+:focus-visible {
+  outline: 2px solid #67e8f9;
+  outline-offset: 2px;
+}
+
+/* MapLibre container must not constrain height via children */
+.sak-map-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sak-anim-pulse,
+  .sak-anim-float {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
+/* Timeline slider: thin luminous track */
+.sak-timeline-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1b3f63 0%, #22d3ee 40%, #7de2c3 60%, #f59e0b 82%, #f97316 100%);
+  outline: none;
+}
+.sak-timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #eaf6ff;
+  border: 2px solid #22d3ee;
+  box-shadow: 0 0 12px rgba(103, 232, 249, 0.8);
+  cursor: pointer;
+}
+.sak-timeline-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #eaf6ff;
+  border: 2px solid #22d3ee;
+  box-shadow: 0 0 12px rgba(103, 232, 249, 0.8);
+  cursor: pointer;
+}
+.sak-timeline-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1b3f63 0%, #22d3ee 40%, #7de2c3 60%, #f59e0b 82%, #f97316 100%);
+}
+
+/* Screen-reader-only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Soft animated ping used by live status dot */
+.sak-anim-ping {
+  animation: sakPing 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes sakPing {
+  0% { transform: scale(1); opacity: 0.6; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Subtle reduced-motion override already present above */

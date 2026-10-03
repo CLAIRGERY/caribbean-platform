@@ -1,0 +1,106 @@
+{
+  "app": {
+    "brand": {
+      "title": "SaKgaZe",
+      "subtitle": "Sargassum intelligence - Caribbean"
+    },
+    "status": {
+      "live": "Live",
+      "connecting": "Connecting to data...",
+      "waking": "The service is waking up. Retrying.",
+      "unavailable": "Service temporarily unavailable",
+      "retry": "Retry",
+      "freshness": "Data freshness",
+      "lastIngestion": "Last ingestion",
+      "never": "Never"
+    },
+    "layers": {
+      "sargassum": "Sargassum",
+      "drift": "Drift",
+      "marine": "Coastal alerts",
+      "satellite": "Satellite",
+      "oceanFlow": "Ocean Flow Mode",
+      "show": "Show",
+      "hide": "Hide",
+      "layersTitle": "Layers"
+    },
+    "timeline": {
+      "title": "Timeline",
+      "now": "Now",
+      "observation": "Observation",
+      "forecast": "Forecast",
+      "latestAcquisition": "Latest acquisition",
+      "reset": "Reset",
+      "filterActive": "Time filter active",
+      "hiddenByFilter": "The view is hidden by the time filter.",
+      "showAll": "Show all"
+    },
+    "inspector": {
+      "title": "Inspector",
+      "empty": "Click a coastal sector or a sargassum patch to inspect its metrics.",
+      "surface": "Surface",
+      "density": "Density",
+      "acquisitionDate": "Acquisition date",
+      "horizon": "Horizon",
+      "source": "Source",
+      "alertLevel": "Alert level",
+      "sector": "Sector",
+      "wind": "Wind",
+      "swell": "Swell",
+      "eta": "ETA",
+      "close": "Close inspector"
+    },
+    "alerts": {
+      "level": {
+        "advisory": "Advisory",
+        "watch": "Watch",
+        "warning": "Warning",
+        "smallcraft": "Small craft"
+      }
+    },
+    "empty": {
+      "noObservations": "No recent observations",
+      "waitingIngestion": "Waiting for first ingestion",
+      "willAppear": "Data will appear automatically after synchronization.",
+      "noDrift": "No drift prediction available",
+      "noAlerts": "No active coastal alert"
+    },
+    "errors": {
+      "sargassum": "Could not load the Sargassum layer",
+      "drift": "Could not load the Drift layer",
+      "marine": "Could not load the Coastal alerts layer",
+      "layerFailedRetrying": "Retrying...",
+      "retryOnce": "Retry"
+    },
+    "loading": {
+      "initializing": "Initializing map...",
+      "mapReady": "Map ready",
+      "layerLoading": "Loading layer..."
+    },
+    "oceanFlow": {
+      "enable": "Enable ocean flow",
+      "disable": "Disable ocean flow",
+      "loading": "Loading ocean flow...",
+      "failed": "Ocean flow unavailable on this device"
+    },
+    "map": {
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "resetNorth": "Reset north",
+      "attribution": "Attribution"
+    },
+    "a11y": {
+      "menu": "Menu",
+      "language": "Language",
+      "languageSwitch": "Switch language",
+      "close": "Close",
+      "open": "Open",
+      "layers": "Data layers",
+      "main": "Main content"
+    },
+    "footer": {
+      "apiBase": "Data source",
+      "render": "Data server"
+    }
+  }
+}
