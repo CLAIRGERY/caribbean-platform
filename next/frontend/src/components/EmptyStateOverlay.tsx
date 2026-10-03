@@ -12,16 +12,15 @@ export default function EmptyStateOverlay({ status }: { status: IngestionStatus 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="pointer-events-auto sak-glass sak-glass--strong sak-luminous-border max-w-sm p-5 text-center"
+        className="pointer-events-auto sak-glass sak-glass--strong sak-luminous-border max-w-sm p-6 text-center"
       >
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-cyan-400/10 text-xl">
-          <span aria-hidden>🧪</span>
+          <span aria-hidden>📡</span>
         </div>
         <h2 className="font-display text-base font-semibold text-white/95">{t('empty.noObservations')}</h2>
-        <p className="mt-1 text-sm text-cyan-100/70">{t('empty.waitingIngestion')}</p>
-        <p className="mt-2 text-xs text-white/45">{t('empty.willAppear')}</p>
+        <p className="mt-1.5 text-sm text-cyan-100/70">{t('empty.waitingIngestion')}</p>
         {serving && (
-          <p className="mt-3 truncate text-[10px] text-cyan-100/40" title={JSON.stringify(status)}>
+          <p className="sak-meta mt-3 truncate" title={JSON.stringify(status)}>
             {Object.entries(status)
               .slice(0, 2)
               .map(([k, v]) => `${k}: ${String(v).slice(0, 40)}`)

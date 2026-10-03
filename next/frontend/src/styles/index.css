@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
-   Ensure the app shell always fills the viewport so MapLibre never ends up
-   with zero height (prevents the html/body height collapse regression).
+   SaKgaZé V2 — oceanographic instrument design tokens & surfaces.
+   Guaranteed app-shell height so MapLibre can never collapse to zero height.
    --------------------------------------------------------------------------- */
 html,
 body,
@@ -15,63 +15,163 @@ body,
   padding: 0;
 }
 
+:root {
+  --sak-abyss: #04122a;
+  --sak-midnight: #0a1e3f;
+  --sak-deepsea: #0e2a4d;
+  --sak-cyan: #22d3ee;
+  --sak-cyan-glow: #67e8f9;
+  --sak-seaglass: #7de2c3;
+  --sak-lagoon: #2dd4a7;
+  --sak-biolume: #8b7cf6;
+  --sak-gold: #d4a94e;
+  --sak-ochre: #c98b32;
+  --sak-rust: #b45309;
+  --sak-amber: #f59e0b;
+  --sak-coral: #ff6d4d;
+}
+
 body {
-  background: var(--sak-abyss, #04122a);
+  background: radial-gradient(120% 90% at 20% 0%, #0a1e3f 0%, #04122a 55%, #020a18 100%);
   color: #e7eef7;
   font-family: Inter, system-ui, sans-serif;
   overflow: hidden;
   overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Main application stage: always at least the dynamic viewport height. */
 .sak-stage {
   min-height: 100dvh;
   width: 100%;
   position: relative;
 }
 
-/* Floating glass surfaces */
+/* glass instrumentation surface */
 .sak-glass {
-  background: linear-gradient(160deg, rgba(10, 30, 63, 0.72), rgba(4, 18, 42, 0.78));
-  border: 1px solid rgba(103, 232, 249, 0.16);
-  border-radius: 16px;
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  position: relative;
+  background:
+    linear-gradient(160deg, rgba(10, 30, 63, 0.78) 0%, rgba(4, 18, 42, 0.86) 100%);
+  border: 1px solid rgba(103, 232, 249, 0.14);
+  border-radius: 18px;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   box-shadow:
-    0 10px 40px rgba(2, 8, 20, 0.55),
-    inset 0 1px 0 rgba(148, 233, 255, 0.12);
+    0 12px 44px rgba(2, 8, 20, 0.6),
+    inset 0 1px 0 rgba(148, 233, 255, 0.14),
+    inset 0 -1px 0 rgba(2, 8, 20, 0.4);
 }
 
 .sak-glass--strong {
-  background: linear-gradient(160deg, rgba(14, 42, 77, 0.85), rgba(4, 18, 42, 0.9));
+  background:
+    linear-gradient(160deg, rgba(14, 42, 77, 0.92) 0%, rgba(4, 18, 42, 0.94) 100%);
 }
 
-/* Thin luminous border used by layer pills / buttons */
-.sak-luminous-border {
+/* section kicker label */
+.sak-kicker {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(103, 232, 249, 0.55);
+  font-weight: 600;
+}
+
+/* small muted metadata */
+.sak-meta {
+  font-size: 10px;
+  color: rgba(231, 238, 247, 0.45);
+  letter-spacing: 0.06em;
+}
+
+/* glowing instrument button */
+.sak-glow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(103, 232, 249, 0.16);
+  background: linear-gradient(160deg, rgba(14, 42, 77, 0.7), rgba(4, 18, 42, 0.85));
+  color: rgba(231, 238, 247, 0.75);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.sak-glow-btn:hover {
+  border-color: rgba(103, 232, 249, 0.4);
+  color: #eaf6ff;
+  box-shadow: 0 0 20px rgba(103, 232, 249, 0.12);
+}
+.sak-glow-btn.is-active {
+  color: var(--sak-cyan-glow);
+  border-color: rgba(103, 232, 249, 0.55);
+  box-shadow:
+    0 0 24px rgba(103, 232, 249, 0.22),
+    inset 0 0 14px rgba(103, 232, 249, 0.1);
+}
+
+/* instrument toggle switch (layer control) */
+.sak-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(103, 232, 249, 0.1);
+  background: linear-gradient(160deg, rgba(10, 30, 63, 0.6), rgba(4, 18, 42, 0.7));
+  color: rgba(231, 238, 247, 0.6);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+.sak-toggle:hover {
+  border-color: rgba(103, 232, 249, 0.3);
+}
+.sak-toggle.is-on {
+  color: #f4faff;
+}
+.sak-toggle .sak-toggle-track {
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(103, 232, 249, 0.12);
   position: relative;
+  flex: none;
+  transition: background 180ms ease;
 }
-.sak-luminous-border::after {
-  content: '';
+.sak-toggle.is-on .sak-toggle-track {
+  background: rgba(103, 232, 249, 0.4);
+}
+.sak-toggle .sak-toggle-knob {
   position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(120deg, rgba(103, 232, 249, 0.5), rgba(125, 226, 195, 0.35), rgba(139, 124, 246, 0.4));
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(231, 238, 247, 0.65);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms ease,
+    box-shadow 180ms ease;
+}
+.sak-toggle.is-on .sak-toggle-knob {
+  transform: translateX(14px);
+  background: var(--sak-cyan-glow);
+  box-shadow: 0 0 8px var(--sak-cyan-glow);
 }
 
-/* Focus visibility for keyboard users */
+/* focus visibility */
 :focus-visible {
   outline: 2px solid #67e8f9;
   outline-offset: 2px;
 }
 
-/* MapLibre container must not constrain height via children */
+/* full-bleed map */
 .sak-map-container {
   position: absolute;
   inset: 0;
@@ -79,23 +179,49 @@ body {
   height: 100%;
 }
 
-/* Respect users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .sak-anim-pulse,
-  .sak-anim-float {
-    animation: none !important;
-    transition: none !important;
-  }
+/* map atmosphere overlay (vignette); must NOT block interaction */
+.sak-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background:
+    radial-gradient(120% 100% at 50% 0%, transparent 55%, rgba(2, 10, 24, 0.5) 100%),
+    radial-gradient(80% 70% at 50% 110%, transparent 60%, rgba(34, 211, 238, 0.05) 100%);
 }
 
+/* sensor scan line (intro) */
+.sak-scanline {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  z-index: 60;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sak-cyan-glow) 30%,
+    #ffffff 50%,
+    var(--sak-cyan-glow) 70%,
+    transparent
+  );
+  box-shadow: 0 0 18px var(--sak-cyan-glow);
+  pointer-events: none;
+}
 
-/* Timeline slider: thin luminous track */
+/* timeline slider: bathymetric gradient ribbon */
 .sak-timeline-slider {
   -webkit-appearance: none;
   appearance: none;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #1b3f63 0%, #22d3ee 40%, #7de2c3 60%, #f59e0b 82%, #f97316 100%);
+  background: linear-gradient(
+    90deg,
+    #12345a 0%,
+    var(--sak-cyan) 42%,
+    var(--sak-seaglass) 58%,
+    var(--sak-amber) 80%,
+    var(--sak-coral) 100%
+  );
   outline: none;
 }
 .sak-timeline-slider::-webkit-slider-thumb {
@@ -105,8 +231,8 @@ body {
   height: 18px;
   border-radius: 999px;
   background: #eaf6ff;
-  border: 2px solid #22d3ee;
-  box-shadow: 0 0 12px rgba(103, 232, 249, 0.8);
+  border: 2px solid var(--sak-cyan);
+  box-shadow: 0 0 14px rgba(103, 232, 249, 0.9);
   cursor: pointer;
 }
 .sak-timeline-slider::-moz-range-thumb {
@@ -114,17 +240,24 @@ body {
   height: 18px;
   border-radius: 999px;
   background: #eaf6ff;
-  border: 2px solid #22d3ee;
-  box-shadow: 0 0 12px rgba(103, 232, 249, 0.8);
+  border: 2px solid var(--sak-cyan);
+  box-shadow: 0 0 14px rgba(103, 232, 249, 0.9);
   cursor: pointer;
 }
 .sak-timeline-slider::-moz-range-track {
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #1b3f63 0%, #22d3ee 40%, #7de2c3 60%, #f59e0b 82%, #f97316 100%);
+  background: linear-gradient(
+    90deg,
+    #12345a 0%,
+    var(--sak-cyan) 42%,
+    var(--sak-seaglass) 58%,
+    var(--sak-amber) 80%,
+    var(--sak-coral) 100%
+  );
 }
 
-/* Screen-reader-only */
+/* screen-reader-only */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -137,7 +270,7 @@ body {
   border-width: 0;
 }
 
-/* Soft animated ping used by live status dot */
+/* live status ping */
 .sak-anim-ping {
   animation: sakPing 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
@@ -146,4 +279,12 @@ body {
   75%, 100% { transform: scale(2.2); opacity: 0; }
 }
 
-/* Subtle reduced-motion override already present above */
+@media (prefers-reduced-motion: reduce) {
+  .sak-anim-ping,
+  .sak-panel-flow-border,
+  .sak-data-pulse > span,
+  .sak-toggle .sak-toggle-knob {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -10,18 +10,15 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
-        // Function form: required by newer bundlers; heavy engines split naturally.
         manualChunks(id: string) {
-          if (id.includes('node_modules')) {
-            if (id.includes('maplibre-gl')) return 'maplibre'
-            if (id.includes('@tanstack/react-query')) return 'query'
-            if (id.includes('framer-motion')) return 'motion'
-            if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
-            if (id.includes('zustand')) return 'zustand'
-            if (id.includes('three')) return 'three-lazy'
-            if (id.includes('react') || id.includes('scheduler')) return 'reactvendor'
-          }
-          return undefined
+          if (!id.includes('node_modules')) return
+          if (id.includes('maplibre-gl')) return 'maplibre'
+          if (id.includes('@tanstack/react-query')) return 'query'
+          if (id.includes('framer-motion')) return 'motion'
+          if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
+          if (id.includes('zustand')) return 'zustand'
+          if (id.includes('three')) return 'three-lazy'
+          if (id.includes('react') || id.includes('scheduler')) return 'reactvendor'
         },
       },
     },

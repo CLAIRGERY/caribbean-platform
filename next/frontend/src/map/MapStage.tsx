@@ -137,6 +137,8 @@ export default function MapStage() {
   return (
     <div ref={containerRef} className="sak-map-container" role="application" aria-label={t('layers.layersTitle') as string}>
       <MapInspectorBridge />
+      {/* subtle ocean-atmosphere vignette (does not block map interaction) */}
+      <div className="sak-vignette" aria-hidden="true" />
       {!ready && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <span className="animate-pulse text-sm text-cyan-100/70">{t('loading.initializing')}</span>

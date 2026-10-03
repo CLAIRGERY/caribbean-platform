@@ -1,106 +1,120 @@
 {
   "app": {
     "brand": {
-      "title": "SaKgaZe",
-      "subtitle": "Intelligence sargasses - Caraibes"
+      "title": "SaKgaZé",
+      "tagline": "Surveillance des sargasses · Caraïbe"
     },
     "status": {
-      "live": "En direct",
-      "connecting": "Connexion aux donnees...",
-      "waking": "Le service se reveille. Nouvelle tentative en cours.",
-      "unavailable": "Service temporairement indisponible",
-      "retry": "Reessayer",
-      "freshness": "Fraicheur des donnees",
-      "lastIngestion": "Derniere ingestion",
+      "connecting": "Connexion…",
+      "waking": "Réveil du service…",
+      "live": "Données en direct",
+      "liveShort": "DIRECT",
+      "syncShort": "SYNCHRONISATION",
+      "degraded": "Service dégradé",
+      "degradedShort": "DÉGRADÉ",
+      "offline": "Service indisponible",
+      "offlineShort": "HORS LIGNE",
+      "retry": "Réessayer",
+      "freshness": "Fraîcheur des données",
+      "lastIngestion": "Dernière ingestion",
       "never": "Jamais"
+    },
+    "telemetry": {
+      "satellite": "Satellite",
+      "satelliteOk": "Actualisé",
+      "drift": "Dérive",
+      "driftOk": "Synchronisée",
+      "marine": "Marine",
+      "marineOk": "Actualisé",
+      "stale": "En retard"
     },
     "layers": {
       "sargassum": "Sargasses",
-      "drift": "Derive",
-      "marine": "Alertes cotieres",
+      "drift": "Dérive",
+      "marine": "Alertes côtières",
       "satellite": "Satellite",
-      "oceanFlow": "Mode Flux Oceanique",
+      "oceanFlow": "Flux océanique",
       "show": "Afficher",
       "hide": "Masquer",
-      "layersTitle": "Couches"
+      "layersTitle": "Couches de données"
     },
     "timeline": {
       "title": "Chronologie",
       "now": "Maintenant",
       "observation": "Observation",
-      "forecast": "Prevision",
-      "latestAcquisition": "Derniere acquisition",
-      "reset": "Reinitialiser",
+      "forecast": "Prévision",
+      "latestAcquisition": "Dernière observation",
+      "reset": "Réinitialiser",
       "filterActive": "Filtre temporel actif",
-      "hiddenByFilter": "L'affichage est masque par le filtre temporel.",
-      "showAll": "Tout afficher"
+      "hiddenByFilter": "L'affichage est masqué par le filtre temporel."
     },
     "inspector": {
       "title": "Inspecteur",
-      "empty": "Cliquez sur un secteur ou un banc de sargasses pour afficher les metriques.",
+      "empty": "Cliquez sur un banc de sargasses, une trajectoire ou un secteur pour inspecter les données.",
       "surface": "Surface",
-      "density": "Densite",
-      "acquisitionDate": "Date d'acquisition",
+      "density": "Densité",
+      "densityLow": "Faible",
+      "densityMedium": "Modérée",
+      "densityHigh": "Élevée",
+      "acquisitionDate": "Acquisition",
       "horizon": "Horizon",
       "source": "Source",
-      "alertLevel": "Niveau d'alerte",
+      "alertLevel": "Niveau",
       "sector": "Secteur",
       "wind": "Vent",
       "swell": "Houle",
       "eta": "ETA",
+      "velocity": "Vitesse",
+      "issued": "Émise",
       "close": "Fermer l'inspecteur"
     },
     "alerts": {
       "level": {
-        "advisory": "Vigilance",
-        "watch": "Avis",
-        "warning": "Alerte",
-        "smallcraft": "Petites embarcations"
+        "normal": "Normal",
+        "watch": "Vigilance",
+        "warning": "Avertissement",
+        "critical": "Critique",
+        "smallcraft": "Petites embarcations",
+        "advisory": "Avis"
       }
     },
     "empty": {
-      "noObservations": "Aucune observation recente",
-      "waitingIngestion": "En attente de la premiere ingestion",
-      "willAppear": "Les donnees apparaitront automatiquement apres synchronisation.",
-      "noDrift": "Aucune prediction de derive disponible",
-      "noAlerts": "Aucune alerte cotiere active"
+      "noObservations": "Aucune observation récente",
+      "waitingIngestion": "SaKgaZé attend la prochaine synchronisation satellite.",
+      "offlineHint": "Les données apparaîtront dès que le service sera de nouveau en ligne."
     },
     "errors": {
-      "sargassum": "Impossible de charger la couche Sargasses",
-      "drift": "Impossible de charger la couche Derive",
-      "marine": "Impossible de charger la couche Alertes cotieres",
-      "layerFailedRetrying": "Nouvelle tentative...",
-      "retryOnce": "Reessayer"
+      "retryOnce": "Réessayer",
+      "layerFailed": "Couche indisponible"
     },
     "loading": {
-      "initializing": "Initialisation de la carte...",
-      "mapReady": "Carte prete",
-      "layerLoading": "Chargement de la couche..."
+      "initializing": "Initialisation de la carte…",
+      "mapReady": "Carte prête"
     },
     "oceanFlow": {
-      "enable": "Activer le Flux Oceanique",
-      "disable": "Desactiver le Flux Oceanique",
-      "loading": "Chargement du Flux Oceanique...",
-      "failed": "Flux Oceanique indisponible sur cet appareil"
+      "enable": "Activer le flux océanique",
+      "disable": "Désactiver le flux océanique",
+      "loading": "Chargement du flux océanique…",
+      "failed": "Flux océanique indisponible sur cet appareil"
     },
     "map": {
-      "zoomIn": "Zoom avant",
-      "zoomOut": "Zoom arriere",
-      "resetNorth": "Reorienter vers le nord",
       "attribution": "Attribution"
     },
     "a11y": {
       "menu": "Menu",
       "language": "Langue",
-      "languageSwitch": "Changer de langue",
       "close": "Fermer",
-      "open": "Ouvrir",
-      "layers": "Couches de donnees",
-      "main": "Contenu principal"
+      "ocean": "Océan",
+      "info": "À propos"
     },
-    "footer": {
-      "apiBase": "Source des donnees",
-      "render": "Serveur de donnees"
+    "about": {
+      "title": "SaKgaZé",
+      "tagline": "Surveillance des sargasses · Caraïbe",
+      "body": "SaKgaZé combine l'imagerie satellite Sentinel-2 et la modélisation de dérive (vents et courants marins) pour anticiper l'arrivée des sargasses sur les côtes caraïbes.",
+      "sourceLabel": "Source"
+    },
+    "intro": {
+      "skip": "Passer"
     }
   }
 }

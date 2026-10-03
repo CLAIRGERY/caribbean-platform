@@ -1,0 +1,24 @@
+{
+  "TEST FIXTURE": "SaKgaZe marine alerts — representative coastal warning sectors. NOT production data. Mirrors /api/v1/weathernext/marine-alerts/latest schema only.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "a1",
+      "geometry": { "type": "Polygon", "coordinates": [[[-62.40, 16.30], [-61.90, 16.28], [-61.88, 16.05], [-62.38, 16.05]]] },
+      "properties": { "alert_level": "warning", "sector": "Guadeloupe côte sous-le-vent", "wind_kmh": 48, "wave_height_m": 2.6, "issued_at": "2026-10-03T05:00:00Z", "source": "WEATHERNEXT" }
+    },
+    {
+      "type": "Feature",
+      "id": "a2",
+      "geometry": { "type": "Polygon", "coordinates": [[[-60.60, 14.40], [-60.60, 14.60], [-59.80, 14.60], [-59.80, 14.40]]] },
+      "properties": { "alert_level": "watch", "sector": "Marie-Galante / Petite Terre", "wind_kmh": 35, "wave_height_m": 1.8, "issued_at": "2026-10-02T05:00:00Z", "source": "WEATHERNEXT" }
+    },
+    {
+      "type": "Feature",
+      "id": "a3",
+      "geometry": { "type": "Point", "coordinates": [-61.52, 15.10] },
+      "properties": { "alert_level": "smallcraft", "sector": "Îlets Pigeon", "wind_kmh": 28, "wave_height_m": 1.1, "issued_at": "2026-10-03T07:00:00Z", "source": "WEATHERNEXT" }
+    }
+  ]
+}

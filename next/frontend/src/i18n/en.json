@@ -1,28 +1,42 @@
 {
   "app": {
     "brand": {
-      "title": "SaKgaZe",
-      "subtitle": "Sargassum intelligence - Caribbean"
+      "title": "SaKgaZé",
+      "tagline": "Sargassum surveillance · Caribbean"
     },
     "status": {
-      "live": "Live",
-      "connecting": "Connecting to data...",
-      "waking": "The service is waking up. Retrying.",
-      "unavailable": "Service temporarily unavailable",
+      "connecting": "Connecting…",
+      "waking": "Waking service…",
+      "live": "Live data",
+      "liveShort": "LIVE",
+      "syncShort": "SYNCING",
+      "degraded": "Degraded service",
+      "degradedShort": "DEGRADED",
+      "offline": "Service unavailable",
+      "offlineShort": "OFFLINE",
       "retry": "Retry",
       "freshness": "Data freshness",
       "lastIngestion": "Last ingestion",
       "never": "Never"
+    },
+    "telemetry": {
+      "satellite": "Satellite",
+      "satelliteOk": "Updated",
+      "drift": "Drift",
+      "driftOk": "Synchronized",
+      "marine": "Marine",
+      "marineOk": "Updated",
+      "stale": "Stale"
     },
     "layers": {
       "sargassum": "Sargassum",
       "drift": "Drift",
       "marine": "Coastal alerts",
       "satellite": "Satellite",
-      "oceanFlow": "Ocean Flow Mode",
+      "oceanFlow": "Ocean flow",
       "show": "Show",
       "hide": "Hide",
-      "layersTitle": "Layers"
+      "layersTitle": "Data layers"
     },
     "timeline": {
       "title": "Timeline",
@@ -32,75 +46,75 @@
       "latestAcquisition": "Latest acquisition",
       "reset": "Reset",
       "filterActive": "Time filter active",
-      "hiddenByFilter": "The view is hidden by the time filter.",
-      "showAll": "Show all"
+      "hiddenByFilter": "The view is hidden by the time filter."
     },
     "inspector": {
       "title": "Inspector",
-      "empty": "Click a coastal sector or a sargassum patch to inspect its metrics.",
+      "empty": "Click a sargassum patch, trajectory or sector to inspect its data.",
       "surface": "Surface",
       "density": "Density",
-      "acquisitionDate": "Acquisition date",
+      "densityLow": "Low",
+      "densityMedium": "Moderate",
+      "densityHigh": "High",
+      "acquisitionDate": "Acquisition",
       "horizon": "Horizon",
       "source": "Source",
-      "alertLevel": "Alert level",
+      "alertLevel": "Level",
       "sector": "Sector",
       "wind": "Wind",
       "swell": "Swell",
       "eta": "ETA",
+      "velocity": "Speed",
+      "issued": "Issued",
       "close": "Close inspector"
     },
     "alerts": {
       "level": {
-        "advisory": "Advisory",
+        "normal": "Normal",
         "watch": "Watch",
         "warning": "Warning",
-        "smallcraft": "Small craft"
+        "critical": "Critical",
+        "smallcraft": "Small craft",
+        "advisory": "Advisory"
       }
     },
     "empty": {
       "noObservations": "No recent observations",
-      "waitingIngestion": "Waiting for first ingestion",
-      "willAppear": "Data will appear automatically after synchronization.",
-      "noDrift": "No drift prediction available",
-      "noAlerts": "No active coastal alert"
+      "waitingIngestion": "SaKgaZé is waiting for the next satellite synchronization.",
+      "offlineHint": "Data will appear once the service is back online."
     },
     "errors": {
-      "sargassum": "Could not load the Sargassum layer",
-      "drift": "Could not load the Drift layer",
-      "marine": "Could not load the Coastal alerts layer",
-      "layerFailedRetrying": "Retrying...",
-      "retryOnce": "Retry"
+      "retryOnce": "Retry",
+      "layerFailed": "Layer unavailable"
     },
     "loading": {
-      "initializing": "Initializing map...",
-      "mapReady": "Map ready",
-      "layerLoading": "Loading layer..."
+      "initializing": "Initializing map…",
+      "mapReady": "Map ready"
     },
     "oceanFlow": {
       "enable": "Enable ocean flow",
       "disable": "Disable ocean flow",
-      "loading": "Loading ocean flow...",
+      "loading": "Loading ocean flow…",
       "failed": "Ocean flow unavailable on this device"
     },
     "map": {
-      "zoomIn": "Zoom in",
-      "zoomOut": "Zoom out",
-      "resetNorth": "Reset north",
       "attribution": "Attribution"
     },
     "a11y": {
       "menu": "Menu",
       "language": "Language",
-      "languageSwitch": "Switch language",
       "close": "Close",
-      "open": "Open",
-      "layers": "Data layers",
-      "main": "Main content"
+      "ocean": "Ocean",
+      "info": "About"
     },
-    "footer": {
-      "apiBase": "Data source",
-      "render": "Data server"
+    "about": {
+      "title": "SaKgaZé",
+      "tagline": "Sargassum surveillance · Caribbean",
+      "body": "SaKgaZé combines Sentinel-2 satellite imagery with drift modelling (wind and ocean currents) to anticipate sargassum strandings on Caribbean shores.",
+      "sourceLabel": "Source"
+    },
+    "intro": {
+      "skip": "Skip"
     }
   }
 }

@@ -1,0 +1,30 @@
+{
+  "TEST FIXTURE": "SaKgaZe drift predictions — representative LineString trajectories seeded from detections over a 48h horizon. NOT production data. Mirrors /api/v1/sakgaze/drift-predictions/latest schema only.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "f1",
+      "geometry": { "type": "LineString", "coordinates": [[-61.62, 15.42], [-61.55, 15.36], [-61.44, 15.30], [-61.30, 15.26]] },
+      "properties": { "seed_id": "S2_20260930_011", "forecast_horizon_h": 24, "forecast_time": "2026-10-01T10:12:00Z", "generated_at": "2026-09-30T10:20:00Z", "velocity_kmh": 18.4, "source": "OPEN-METEO" }
+    },
+    {
+      "type": "Feature",
+      "id": "f2",
+      "geometry": { "type": "LineString", "coordinates": [[-60.95, 14.86], [-60.82, 14.68], [-60.66, 14.55], [-60.48, 14.44]] },
+      "properties": { "seed_id": "S2_20261001_044", "forecast_horizon_h": 48, "forecast_time": "2026-10-03T14:02:00Z", "generated_at": "2026-10-01T14:10:00Z", "velocity_kmh": 24.1, "source": "OPEN-METEO" }
+    },
+    {
+      "type": "Feature",
+      "id": "f3",
+      "geometry": { "type": "LineString", "coordinates": [[-62.30, 16.45], [-62.18, 16.38], [-62.02, 16.33], [-61.88, 16.30]] },
+      "properties": { "seed_id": "S2_20260928_002", "forecast_horizon_h": 24, "forecast_time": "2026-09-29T11:47:00Z", "generated_at": "2026-09-28T11:55:00Z", "velocity_kmh": 15.7, "source": "OPEN-METEO" }
+    },
+    {
+      "type": "Feature",
+      "id": "f4",
+      "geometry": { "type": "LineString", "coordinates": [[-61.05, 14.05], [-60.94, 14.02], [-60.83, 13.99], [-60.68, 13.95]] },
+      "properties": { "seed_id": "S2_20261002_078", "forecast_horizon_h": 48, "forecast_time": "2026-10-04T15:30:00Z", "generated_at": "2026-10-02T15:35:00Z", "velocity_kmh": 27.3, "source": "OPEN-METEO" }
+    }
+  ]
+}
