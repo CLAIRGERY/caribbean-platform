@@ -47,7 +47,8 @@
       "latestAcquisition": "Latest acquisition",
       "reset": "Reset",
       "filterActive": "Time filter active",
-      "hiddenByFilter": "The view is hidden by the time filter."
+      "hiddenByFilter": "The view is hidden by the time filter.",
+      "waiting": "WAITING FOR SYNC"
     },
     "inspector": {
       "title": "Inspector",

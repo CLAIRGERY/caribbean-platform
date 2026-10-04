@@ -62,6 +62,24 @@ export default function Timeline() {
       new Date(ms),
     )
 
+  // Back end reachable but zero timestamps → elegant EN ATTENTE state (no fake range)
+  const anySuccess = det.isSuccess || drf.isSuccess || mar.isSuccess
+  if (stamps.length === 0 && anySuccess) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="pointer-events-auto absolute bottom-4 left-1/2 z-30 w-fit -translate-x-1/2"
+      >
+        <div className="sak-glass px-4 py-2.5">
+          <div className="sak-kicker mb-0.5">{t('timeline.latestAcquisition')}</div>
+          <div className="font-display text-xs font-semibold tracking-wide text-white/55">{t('timeline.waiting')}</div>
+        </div>
+      </motion.div>
+    )
+  }
+
   // Single timestamp → elegant "DERNIÈRE ACQUISITION" mode (no fake range)
   if (stamps.length === 1) {
     return (

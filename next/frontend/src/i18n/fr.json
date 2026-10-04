@@ -47,7 +47,8 @@
       "latestAcquisition": "Dernière observation",
       "reset": "Réinitialiser",
       "filterActive": "Filtre temporel actif",
-      "hiddenByFilter": "L'affichage est masqué par le filtre temporel."
+      "hiddenByFilter": "L'affichage est masqué par le filtre temporel.",
+      "waiting": "EN ATTENTE DE SYNCHRONISATION"
     },
     "inspector": {
       "title": "Inspecteur",

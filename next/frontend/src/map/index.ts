@@ -12,7 +12,7 @@ export const DEFAULT_ZOOM = 7.7
  * Removed sources (not usable): Esri World Imagery (403 blocked from our network),
  * CARTO basemaps.dark_all (now serves an "API KEY REQUIRED" watermark tile to anonymous clients).
  */
-export const OFM_DARK_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
+export const OFM_DARK_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty'
 
 const GIBS_SATELLITE = [
   'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/BlueMarble_ShadedRelief_Bathymetry/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',

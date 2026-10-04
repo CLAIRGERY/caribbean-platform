@@ -55,7 +55,7 @@ export function addDriftLayer(map: MLMap, data: FeatureCollection<Record<string,
       paint: {
         'line-color': '#F59E0B',
         'line-width': 9,
-        'line-opacity': 0.13,
+        'line-opacity': 0.2,
         'line-blur': 4,
       },
     })
@@ -96,7 +96,7 @@ export function addMarineLayer(map: MLMap, data: FeatureCollection<Record<string
           'normal', '#7DE2C3',
           '#7DE2C3',
         ],
-        'fill-opacity': 0.18,
+        'fill-opacity': 0.24,
         'fill-outline-color': [
           'match',
           ['to-string', ['coalesce', ['get', 'alert_level'], 'normal']],

@@ -369,7 +369,7 @@ body {
 
 /* map surface should show satellite imagery crisp on top of gentle atmosphere */
 .sak-map-container .maplibregl-canvas {
-  filter: saturate(1.05) contrast(1.03) brightness(0.98);
+  filter: saturate(0.85) contrast(1.28) brightness(0.72) hue-rotate(-8deg);
 }
 
 /* telemetry strip */

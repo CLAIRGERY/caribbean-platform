@@ -28,10 +28,9 @@ const fmtDate = (v: unknown): string | null => {
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(ts))
 }
 
-function densityLabel(score: unknown): string | null {
+function densityBucket(score: unknown): 'high' | 'medium' | 'low' | null {
   if (typeof score !== 'number' || !Number.isFinite(score)) return null
-  // bucket with i18n-friendly approximations (never invented numbers)
-  return score >= 0.75 ? 'HIGH' : score >= 0.45 ? 'MOD' : 'LOW'
+  return score >= 0.75 ? 'high' : score >= 0.45 ? 'medium' : 'low'
 }
 
 const KIND_META: Record<'sargassum' | 'drift' | 'marine', { label: string; glow: string }> = {
@@ -100,11 +99,18 @@ export default function Inspector() {
                 </div>
                 <WaveSeparator color={OCEAN.ochre} />
                 <div className="space-y-0.5">
-                  {densityLabel(selection.props.density_score) && (
-                    <Row
-                      label={t('inspector.density') as string}
-                      value={densityLabel(selection.props.density_score) as string}
-                    />
+                  {(() => {
+                    const bucket = densityBucket(selection.props.density_score)
+                    return bucket && (
+                      <Row
+                        label={t('inspector.density') as string}
+                        value={(t(`inspector.density${bucket === 'high' ? 'High' : bucket === 'medium' ? 'Medium' : 'Low'}`) as string) ??
+                              { high: 'Élevée', medium: 'Modérée', low: 'Faible' }[bucket]}
+                      />
+                    )
+                  })()}
+                  {typeof selection.props.external_id === 'string' && (
+                    <Row label="ID" value={selection.props.external_id} />
                   )}
                   {fmtDate(selection.props.acquisition_date) && (
                     <Row
