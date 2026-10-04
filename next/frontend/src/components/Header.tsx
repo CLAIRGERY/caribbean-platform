@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import logo from '../assets/brand/logo-sakgaze.png'
-import { useIngestionStatus } from '../hooks/useLayers'  // retained for future telemetry surfaces
+import { useHealth } from '../hooks/useLayers'
 import { useDetections, useDrift, useMarineAlerts } from '../hooks/useLayers'
 import { deriveConnState } from '../lib/connState'
 import { MarineStatusOrb, type OrbState } from './premium'
@@ -21,7 +21,7 @@ function connToOrb(c: string): OrbState {
 /** Iconic floating instrumentation bar (premium V2 header). */
 export default function Header() {
   const { t } = useTranslation()
-  void useIngestionStatus() // keep query mounted (refresh timing shared with other layers)
+  
   const det = useDetections()
   const drf = useDrift()
   const mar = useMarineAlerts()
@@ -30,6 +30,7 @@ export default function Header() {
   const toggleLayer = useLayers((s) => s.toggle)
   const oceanFlowOn = useLayers((s) => s.oceanFlow)
   const clearSel = useSelection((s) => s.clear)
+  const healthQ = useHealth()
   const [aboutOpen, setAboutOpen] = useState(false)
 
   useEffect(() => {
@@ -43,10 +44,10 @@ export default function Header() {
     return undefined
   }, [menuOpen, setMenuOpen])
 
-  const states = [det, drf, mar].map((q) => ({ pending: q.isPending, ok: q.isSuccess, err: q.isError }))
-  const succ = states.filter((s) => s.ok).length
-  const errs = states.filter((s) => s.err).length
-  const conn = deriveConnState(states as never, succ, errs)
+  const succ = [det, drf, mar].filter((q) => q.isSuccess).length
+  const errs = [det, drf, mar].filter((q) => q.isError).length
+  const healthOk: boolean | null = healthQ.isSuccess ? true : healthQ.isError ? false : null
+  const conn = deriveConnState(succ, errs, 3, healthOk)
   const orb = connToOrb(conn)
   const orbLabel =
     conn === 'live'

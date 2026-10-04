@@ -24,6 +24,7 @@ export default function OceanFlowGate({ enabled }: { enabled: boolean }) {
         const container = containerRef.current
 
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' })
+        renderer.setClearColor(0x000000, 0)
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
         renderer.setSize(container.clientWidth, container.clientHeight)
         container.appendChild(renderer.domElement)

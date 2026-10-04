@@ -86,24 +86,29 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ---------------------------------------------------------------------------
 
 @app.get("/health")
-def health(db: Session = Depends(get_db)) -> Dict[str, Any]:
-    db_ok = "ok"
+def health() -> Dict[str, Any]:
+    """Process liveness — NEVER depends on the DB (Render probes this on boot)."""
+    return {"status": "ok", "service": "sakgaze-api"}
+
+
+@app.get("/health/db")
+def health_db(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Optional DB health; bounded by the engine-level statement timeout."""
+    from sqlalchemy import text
     try:
-        from sqlalchemy import text
         db.execute(text("SELECT 1"))
+        return {"database": "ok"}
     except Exception:
-        db_ok = "error"
-    return {
-        "status": "ok" if db_ok == "ok" else "degraded",
-        "service": "sakgaze-api",
-        "database": db_ok,
-    }
+        return {"database": "error"}
 
 
 @app.get("/api/v1/ingestion/status")
 def ingestion_status(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Read-only ingestion status for the three collectors."""
-    return get_ingestion_status(db)
+    try:
+        return get_ingestion_status(db)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"database unavailable: {exc.__class__.__name__}")
 
 
 # ---------------------------------------------------------------------------
@@ -174,11 +179,14 @@ def get_detections_latest(
             detail="limit must be between 1 and 10000",
         )
 
-    return get_latest_sargassum(
-        db,
-        days=days,
-        max_features=limit,
-    )
+    try:
+        return get_latest_sargassum(
+            db,
+            days=days,
+            max_features=limit,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"database unavailable: {exc.__class__.__name__}")
 
 
 @app.get("/api/v1/weathernext/marine-alerts/latest")
@@ -199,11 +207,14 @@ def get_alerts_latest(
             detail="limit must be between 1 and 10000",
         )
 
-    return get_latest_marine_alerts(
-        db,
-        days=days,
-        max_features=limit,
-    )
+    try:
+        return get_latest_marine_alerts(
+            db,
+            days=days,
+            max_features=limit,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"database unavailable: {exc.__class__.__name__}")
 
 
 @app.get("/api/v1/sakgaze/drift-predictions/latest")
@@ -224,8 +235,11 @@ def get_drift_latest(
             detail="limit must be between 1 and 10000",
         )
 
-    return get_latest_drift_predictions(
-        db,
-        days=days,
-        max_features=limit,
-    )
+    try:
+        return get_latest_drift_predictions(
+            db,
+            days=days,
+            max_features=limit,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"database unavailable: {exc.__class__.__name__}")

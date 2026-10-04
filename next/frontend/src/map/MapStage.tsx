@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FeatureCollection } from '../types/geo'
 import { initMap, getMap, setImageryVisible, destroyMap } from './index'
-import { addSargassumLayer, addDriftLayer, addMarineLayer, setLayerVisibility, setSourceData, SRC } from './layers'
+import { addSargassumLayer, addDriftLayer, addMarineLayer, setLayerVisibility, setSourceData, SRC, syncScientificLayerOrder, assertLayerOrderDev, setImageryContrastMode } from './layers'
 import { useDetections, useDrift, useMarineAlerts, useIngestionStatus } from '../hooks/useLayers'
 import { useLayers as useLayerStore, useTimeline } from '../stores'
 import EmptyStateOverlay from '../components/EmptyStateOverlay'
@@ -105,6 +105,8 @@ export default function MapStage() {
       addSargassumLayer(map, data)
       setSourceData(map, SRC.sargassum, data)
       setLayerVisibility(map, ['sargassum-fill', 'sargassum-outline'], layerStore.sargassum)
+      syncScientificLayerOrder(map)
+      assertLayerOrderDev(map)
     }
   }, [detections.data, timeline.range.from, timeline.range.to, ready, layerStore.sargassum])
 
@@ -116,7 +118,9 @@ export default function MapStage() {
     if (data) {
       addDriftLayer(map, data)
       setSourceData(map, SRC.drift, data)
-      setLayerVisibility(map, ['drift-line'], layerStore.drift)
+      setLayerVisibility(map, ['drift-line', 'drift-halo'], layerStore.drift)
+      syncScientificLayerOrder(map)
+      assertLayerOrderDev(map)
     }
   }, [drift.data, timeline.range.from, timeline.range.to, ready, layerStore.drift])
 
@@ -129,6 +133,8 @@ export default function MapStage() {
       addMarineLayer(map, data)
       setSourceData(map, SRC.marine, data)
       setLayerVisibility(map, ['marine-fill', 'marine-stroke'], layerStore.marine)
+      syncScientificLayerOrder(map)
+      assertLayerOrderDev(map)
     }
   }, [marine.data, timeline.range.from, timeline.range.to, ready, layerStore.marine])
 
@@ -137,15 +143,18 @@ export default function MapStage() {
     const map = getMap()
     if (!map) return
     setLayerVisibility(map, ['sargassum-fill', 'sargassum-outline'], layerStore.sargassum)
-    setLayerVisibility(map, ['drift-line'], layerStore.drift)
+    setLayerVisibility(map, ['drift-line', 'drift-halo'], layerStore.drift)
     setLayerVisibility(map, ['marine-fill', 'marine-stroke'], layerStore.marine)
   }, [layerStore.sargassum, layerStore.drift, layerStore.marine, ready])
 
-  // Imagery (Satellite toggle)
+  // Imagery (Satellite toggle) — always re-syncs scientific order above it
   useEffect(() => {
     const map = getMap()
     if (!map || !ready) return
     setImageryVisible(map, layerStore.satelliteBasemap)
+    syncScientificLayerOrder(map)
+    setImageryContrastMode(map, layerStore.satelliteBasemap)
+    assertLayerOrderDev(map)
   }, [layerStore.satelliteBasemap, ready])
 
   const anyFilterActive = timeline.range.from !== null || timeline.range.to !== null

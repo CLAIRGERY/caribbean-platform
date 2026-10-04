@@ -487,3 +487,14 @@ body {
     animation: none !important;
   }
 }
+
+
+/* ---- deterministic canvas stacking ---- */
+.sak-map-container .maplibregl-canvas { z-index: 1; }
+.sak-map-container .maplibregl-canvas-container { z-index: 1; }
+/* Three.js canvases (Ocean Flow / ShaderLayers) must be above MapLibre canvas */
+.sak-map-container > canvas { z-index: 2; }
+/* atmosphere overlays go under imagery and under the map */
+.sak-atmo-bathy, .sak-atmo-caustics, .sak-atmo-currents, .sak-atmo-coast { z-index: 0; }
+.sak-vignette { z-index: 3; }
+.sak-scan-sweep { z-index: 4; }

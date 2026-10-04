@@ -17,7 +17,16 @@ if not DATABASE_URL:
     from shared.config.settings import DATABASE_URL as _FALLBACK_URL
     DATABASE_URL = _FALLBACK_URL
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=1800,
+    connect_args={
+        "connect_timeout": 8,
+        "application_name": "sakgaze-api",
+        "options": "-c statement_timeout=8000 -c idle_in_transaction_session_timeout=30000",
+    },
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -31,14 +40,25 @@ def get_db() -> Generator:
 
 
 def init_db() -> None:
-    """Create tables, PostGIS extension, and spatial GIST indexes."""
+    """Create tables, PostGIS extension, and spatial GIST indexes.
+
+    Boot safety: every step is fail-soft. A unreachable/sleeping database must
+    NOT block the API process from starting; the process stays alive and serves
+    /health while data endpoints report degraded.
+    """
+    import logging
     from sqlalchemy import text
-    with engine.connect() as conn:
-        conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
-        conn.commit()
-    Base.metadata.create_all(bind=engine)
-    _create_spatial_indexes()
-    _apply_migrations()
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
+            conn.commit()
+        Base.metadata.create_all(bind=engine)
+        _create_spatial_indexes()
+        _apply_migrations()
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger("sakgaze.database").warning(
+            "init_db skipped: database not reachable (%s); boot continues without DB schema", exc
+        )
 
 
 def _apply_migrations() -> None:

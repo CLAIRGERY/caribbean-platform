@@ -4,15 +4,16 @@
  */
 export type ConnState = 'connecting' | 'waking' | 'live' | 'degraded' | 'offline'
 
-import type { UseQueryResult } from '@tanstack/react-query'
-
 export function deriveConnState(
-  queries: Pick<UseQueryResult<unknown>, 'isPending'>[],
   successCount: number,
   errorCount: number,
+  total: number,
+  healthOk: boolean | null = null,
 ): ConnState {
-  const total = queries.length
+  if (healthOk === false && errorCount >= total) return 'offline'
+  if (healthOk === false) return 'degraded'
   if (errorCount === total) return 'offline'
+  if (healthOk === true && errorCount > 0) return 'degraded'
   if (errorCount > 0) return 'degraded'
   if (successCount === total) return 'live'
   return 'connecting'

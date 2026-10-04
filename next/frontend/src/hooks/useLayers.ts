@@ -1,5 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import {
+  fetchHealth,
   fetchDetections,
   fetchDrift,
   fetchMarineAlerts,
@@ -60,6 +61,16 @@ export function useMarineAlerts(): UseQueryResult<FC> {
     queryFn: () => withColdStartRetry(fetchMarineAlerts),
     staleTime: 5 * 60_000,
     refetchInterval: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  })
+}
+
+export function useHealth(): UseQueryResult<{ status?: string }> {
+  return useQuery<{ status?: string }>({
+    queryKey: ['health'],
+    queryFn: () => withColdStartRetry(fetchHealth),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
     refetchOnWindowFocus: false,
   })
 }

@@ -140,6 +140,33 @@ export function setLayerVisibility(map: MLMap, layerIds: string[], visible: bool
   }
 }
 
+/**
+ * Presentation-only satellite contrast mode (no scientific meaning change):
+ * NASA GIBS imagery can be brighter than the dark vector map, so the
+ * scientific overlays get slightly stronger strokes when imagery is visible.
+ */
+export function setImageryContrastMode(map: MLMap, imageryOn: boolean): void {
+  const bump = (paintProp: string, value: number | number[]) => {
+    void paintProp
+    void value
+  }
+  void bump
+  if (map.getLayer('sargassum-outline')) {
+    map.setPaintProperty('sargassum-outline', 'line-width', imageryOn ? 1.6 : 1.2)
+    map.setPaintProperty('sargassum-outline', 'line-opacity', imageryOn ? 0.85 : 0.6)
+  }
+  if (map.getLayer('marine-stroke')) {
+    map.setPaintProperty('marine-stroke', 'line-width', imageryOn ? 2.0 : 1.6)
+    map.setPaintProperty('marine-stroke', 'line-opacity', imageryOn ? 0.92 : 0.8)
+  }
+  if (map.getLayer('drift-line')) {
+    map.setPaintProperty('drift-line', 'line-width', imageryOn ? 2.6 : 2.2)
+  }
+  if (map.getLayer('drift-halo')) {
+    map.setPaintProperty('drift-halo', 'line-opacity', imageryOn ? 0.26 : 0.2)
+  }
+}
+
 export function setSourceData(
   map: MLMap,
   srcId: string,
@@ -149,5 +176,56 @@ export function setSourceData(
     safeSetData(map, srcId, data)
   } else {
     map.addSource(srcId, { type: 'geojson', data })
+  }
+}
+
+
+/** Index of the first scientific layer (or undefined when none exist yet). */
+/**
+ * Deterministic layer order:
+ *   background < OFM land/water labels < imageryNASA < sargassum* < marine* < drift-halo < drift-line
+ * Called after style load, imagery toggle, and any scientific source change.
+ */
+export function syncScientificLayerOrder(map: MLMap): void {
+  // Desired BOTTOM→TOP order among scientific layers.
+  const desired: string[] = [
+    'imagery-layer',
+    'sargassum-fill',
+    'sargassum-outline',
+    'marine-fill',
+    'marine-stroke',
+    'drift-halo',
+    'drift-line',
+  ]
+
+  // MapLibre addLayer(id, beforeId) places `id` immediately BELOW `beforeId`.
+  // To enforce a deterministic bottom→top order:
+  //   for each i from topmost→bottommost: moveLayer(layer[i], layer[i+1])
+  // which stacks each one just below its successor.
+  for (let i = desired.length - 1; i > 0; i--) {
+    const me = desired[i]
+    const above = desired[i - 1]
+    if (map.getLayer(me) && map.getLayer(above)) {
+      map.moveLayer(me, above)
+    }
+  }
+  if (import.meta.env.DEV) console.debug('syncScientificLayerOrder applied')
+}
+
+/** Returns true when scientific layers exist above imagery (dev assertion helper). */
+export function assertLayerOrderDev(map: MLMap): void {
+  if (!import.meta.env.DEV) return
+  const idx = (id: string): number | undefined => {
+    const style = map.getStyle()
+    const i = (style.layers as Array<{ id: string }>).findIndex((l) => l.id === id)
+    return i === -1 ? undefined : i
+  }
+  const nasa = idx('imagery-layer')
+  if (nasa === undefined) return
+  for (const id of ['sargassum-fill', 'drift-line', 'marine-fill', 'drift-halo']) {
+    const i = idx(id)
+    if (i !== undefined && i < nasa) {
+      console.warn(`[layer-order] ${id} (${i}) is BELOW imagery-layer (${nasa})`)
+    }
   }
 }

@@ -86,8 +86,15 @@ export function setImageryVisible(map: Map, visible: boolean): void {
   }
   if (!map.getSource('imagery')) map.addSource('imagery', satelliteSpec())
   if (!map.getLayer('imagery-layer')) {
-    // Insert as the bottom-most layer above background so vector labels stack above it
-    map.addLayer({ id: 'imagery-layer', type: 'raster', source: 'imagery', paint: { 'raster-opacity': 1 } })
+    // Insert imagery under the first symbol (label) layer so geographic
+    // labels (islands, places, water) stay readable on top of the imagery.
+    const style = map.getStyle()
+    const firstSymbol = (style.layers as Array<{ id: string; type: string }>).find((l) => l.type === 'symbol')
+    const beforeId = firstSymbol?.id
+    map.addLayer(
+      { id: 'imagery-layer', type: 'raster', source: 'imagery', paint: { 'raster-opacity': 0.85 } },
+      beforeId,
+    )
   }
 }
 
