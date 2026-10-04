@@ -26,7 +26,8 @@
       "driftOk": "Synchronized",
       "marine": "Marine",
       "marineOk": "Updated",
-      "stale": "Stale"
+      "stale": "Stale",
+      "pending": "PENDING"
     },
     "layers": {
       "sargassum": "Sargassum",
@@ -66,7 +67,8 @@
       "eta": "ETA",
       "velocity": "Speed",
       "issued": "Issued",
-      "close": "Close inspector"
+      "close": "Close inspector",
+      "sectorPlural": "sectors"
     },
     "alerts": {
       "level": {

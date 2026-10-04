@@ -26,7 +26,8 @@
       "driftOk": "Synchronisée",
       "marine": "Marine",
       "marineOk": "Actualisé",
-      "stale": "En retard"
+      "stale": "En retard",
+      "pending": "EN ATTENTE"
     },
     "layers": {
       "sargassum": "Sargasses",
@@ -66,7 +67,8 @@
       "eta": "ETA",
       "velocity": "Vitesse",
       "issued": "Émise",
-      "close": "Fermer l'inspecteur"
+      "close": "Fermer l'inspecteur",
+      "sectorPlural": "secteurs"
     },
     "alerts": {
       "level": {

@@ -18,33 +18,47 @@ export function addSargassumLayer(map: MLMap, data: FeatureCollection<Record<str
       type: 'fill',
       source: SRC.sargassum,
       paint: {
-        // density_score 0..1 interpolates thematically; unknown falls back to mid
+        // density_score 0..1 organic tropical palette (no purple); unknown falls back to mid
         'fill-color': [
           'interpolate',
           ['linear'],
           ['to-number', ['coalesce', ['get', 'density_score'], 0.4]],
-          0.2, '#7DE2C3',
-          0.5, '#D4A94E',
-          0.75, '#C98B32',
-          0.92, '#B45309',
+          0.2, '#8EA85B',
+          0.5, '#C3A84B',
+          0.75, '#E09A38',
+          0.92, '#C76832',
         ],
-        'fill-opacity': 0.34,
-        'fill-outline-color': '#67E8F9',
+        'fill-opacity': 0.38,
+        'fill-outline-color': '#E09A38',
       },
     })
     map.addLayer({
       id: 'sargassum-outline',
       type: 'line',
       source: SRC.sargassum,
-      paint: { 'line-color': '#67E8F9', 'line-width': 1.1, 'line-opacity': 0.55 },
+      paint: { 'line-color': '#E09A38', 'line-width': 1.2, 'line-opacity': 0.6 },
     })
   }
 }
 
-/** Drift: luminous current paths; canonical MapLibre lines stay readable. */
+/** Drift hero: halo corridor + crisp trajectory + fading forecast tail + endpoint glow. */
 export function addDriftLayer(map: MLMap, data: FeatureCollection<Record<string, unknown>>): void {
   if (!map.getSource(SRC.drift)) {
     map.addSource(SRC.drift, { type: 'geojson', data })
+  }
+  if (!map.getLayer('drift-halo')) {
+    map.addLayer({
+      id: 'drift-halo',
+      type: 'line',
+      source: SRC.drift,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#F59E0B',
+        'line-width': 9,
+        'line-opacity': 0.13,
+        'line-blur': 4,
+      },
+    })
   }
   if (!map.getLayer('drift-line')) {
     map.addLayer({
@@ -52,7 +66,12 @@ export function addDriftLayer(map: MLMap, data: FeatureCollection<Record<string,
       type: 'line',
       source: SRC.drift,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#F59E0B', 'line-width': 2.1, 'line-opacity': 0.82 },
+      paint: {
+        'line-color': '#F59E0B',
+        'line-width': 2.2,
+        // view: opacity keyed on forecast_time so far forecasts fade (no fabricated uncertainty)
+        'line-opacity': ['case', ['has', 'forecast_time'], 0.72, 0.55],
+      },
     })
   }
 }

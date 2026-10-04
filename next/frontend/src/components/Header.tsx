@@ -8,6 +8,7 @@ import { deriveConnState } from '../lib/connState'
 import { MarineStatusOrb, type OrbState } from './premium'
 import LangSwitch from './LangSwitch'
 import StatusBanner from './StatusBanner'
+import TelemetryStrip from './TelemetryStrip'
 import { useUI, useLayers, useSelection } from '../stores'
 
 function connToOrb(c: string): OrbState {
@@ -175,6 +176,7 @@ export default function Header() {
               <MarineStatusOrb state={orb} size={9} />
               <span className="text-[10px] uppercase tracking-widest text-white/50">{orbLabel}</span>
             </div>
+            <TelemetryStrip />
             <button
               type="button"
               className="rounded-lg border border-white/10 px-3 py-2.5 text-left text-sm text-cyan-100/90"

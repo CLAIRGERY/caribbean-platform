@@ -186,8 +186,8 @@ body {
   pointer-events: none;
   z-index: 5;
   background:
-    radial-gradient(120% 100% at 50% 0%, transparent 55%, rgba(2, 10, 24, 0.5) 100%),
-    radial-gradient(80% 70% at 50% 110%, transparent 60%, rgba(34, 211, 238, 0.05) 100%);
+    radial-gradient(115% 95% at 50% 0%, transparent 62%, rgba(2, 10, 24, 0.32) 100%),
+    radial-gradient(80% 70% at 50% 110%, transparent 62%, rgba(11, 196, 217, 0.07) 100%);
 }
 
 /* sensor scan line (intro) */
@@ -286,5 +286,204 @@ body {
   .sak-toggle .sak-toggle-knob {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* =========================================================
+   SaKgaZé V3 — ocean atmosphere layers
+   ========================================================= */
+
+/* staged bathymetric depth field (behind basemap raster, on bg layer) */
+.sak-atmo-bathy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 110% at 50% 120%, rgba(6, 59, 82, 0.75) 0%, rgba(4, 21, 39, 0.0) 60%),
+    radial-gradient(90% 80% at 85% 15%, rgba(11, 196, 217, 0.10) 0%, rgba(4, 21, 39, 0) 60%),
+    radial-gradient(70% 55% at 15% 25%, rgba(73, 226, 210, 0.06) 0%, transparent 65%);
+  mix-blend-mode: screen;
+}
+
+/* caustic motion: slow moving light ripples via animated gradients */
+.sak-atmo-caustics {
+  position: absolute;
+  inset: -50%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(103,245,226,0.25) 0 2px, transparent 2px 90px),
+    repeating-linear-gradient(65deg, rgba(103,245,226,0.18) 0 2px, transparent 2px 120px);
+  background-size: 320px 320px, 480px 480px;
+  animation: sakCausticsDrift 46s linear infinite;
+  mix-blend-mode: screen;
+  transform: rotate(-2deg);
+}
+@keyframes sakCausticsDrift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 320px 120px, 480px 210px; }
+}
+
+/* current field streaks: gently drifting diagonal cyan filaments */
+.sak-atmo-currents {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.11;
+  background-image:
+    repeating-linear-gradient(100deg, transparent 0 46px, rgba(11,196,217,0.35) 46px 48px, transparent 48px 120px);
+  background-size: 240px 240px;
+  animation: sakCurrentsFlow 60s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes sakCurrentsFlow {
+  0%   { background-position: 0 0; }
+  100% { background-position: -480px 120px; }
+}
+
+/* coastal glow at horizon */
+.sak-atmo-coast {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(11,196,217,0.14) 0%, transparent 45%),
+    radial-gradient(90% 70% at 80% 90%, rgba(73,226,210,0.10) 0%, transparent 55%);
+  mix-blend-mode: screen;
+}
+
+/* scan sweep (one-shot) */
+.sak-scan-sweep {
+  position: absolute;
+  inset-inline: 0;
+  height: 40vh;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(103,245,226,0.09) 45%, rgba(103,232,249,0.25) 50%, rgba(103,245,226,0.09) 55%, transparent);
+  mix-blend-mode: screen;
+}
+
+/* map surface should show satellite imagery crisp on top of gentle atmosphere */
+.sak-map-container .maplibregl-canvas {
+  filter: saturate(1.05) contrast(1.03) brightness(0.98);
+}
+
+/* telemetry strip */
+.sak-telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.sak-telemetry .sak-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(103,232,249,0.12);
+  color: rgba(231,238,247,0.65);
+}
+.sak-telemetry .sak-telemetry-row strong {
+  color: #EAF6FF;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sak-telemetry .sak-pending {
+  color: rgba(231,238,247,0.30);
+}
+
+/* instrument cluster */
+.sak-instrument {
+  border-radius: 14px;
+  border: 1px solid rgba(103,232,249,0.12);
+  background:
+    linear-gradient(170deg, rgba(10,30,63,0.55) 0%, rgba(4,21,39,0.72) 100%);
+  overflow: hidden;
+}
+.sak-instrument .sak-controller {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-top: 1px solid rgba(103,232,249,0.07);
+  background-image: repeating-linear-gradient(90deg, transparent 0 22px, rgba(103,232,249,0.05) 22px 23px);
+  cursor: pointer;
+  transition: background 140ms ease, box-shadow 140ms ease;
+  min-height: 44px;
+}
+.sak-instrument .sak-controller:hover {
+  background-color: rgba(103,232,249,0.05);
+}
+.sak-instrument .sak-controller.is-active {
+  box-shadow: inset 0 0 18px rgba(103,232,249,0.08);
+}
+.sak-instrument .sak-wave {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 12px;
+}
+.sak-instrument .sak-wave > span {
+  width: 2px;
+  border-radius: 1px;
+  background: var(--glow, #22d3ee);
+}
+
+/* timeline scientific ribbon */
+.sak-timeline-ribbon {
+  height: 26px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(6,59,82,0.5), rgba(6,59,82,0.25));
+  border: 1px solid rgba(103,232,249,0.14);
+}
+.sak-timeline-ribbon .sak-tl-marker {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(231,238,247,0.35);
+  cursor: pointer;
+}
+.sak-timeline-ribbon .sak-tl-marker.is-forecast {
+  background: rgba(240,180,77,0.4);
+}
+
+/* minimap */
+.sak-minimap {
+  position: absolute;
+  left: 14px;
+  bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  width: 148px;
+  aspect-ratio: 1;
+  z-index: 30;
+  pointer-events: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(103,232,249,0.16);
+  box-shadow: 0 8px 26px rgba(2,8,20,0.55);
+  overflow: hidden;
+  background: rgba(4,21,39,0.82);
+  backdrop-filter: blur(14px);
+}
+.sak-minimap .sak-mvp-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sak-atmo-caustics,
+  .sak-atmo-currents {
+    animation: none !important;
   }
 }

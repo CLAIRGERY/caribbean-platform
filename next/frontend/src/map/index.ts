@@ -22,7 +22,7 @@ export function buildStyle(satellite: boolean): StyleSpecification {
     },
     layers: [
       { id: 'bg', type: 'background', paint: { 'background-color': '#04122A' } },
-      { id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 0.92 } },
+      { id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 1, 'raster-brightness-max': 1.0, 'raster-brightness-min': -0.1 } },
     ],
   }
 }
@@ -56,7 +56,7 @@ export function setBasemapSatellite(map: Map, satellite: boolean): void {
   map.removeLayer('basemap')
   map.removeSource('basemap')
   map.addSource('basemap', rasterSource(satellite))
-  map.addLayer({ id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 0.92 } })
+  map.addLayer({ id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 1, 'raster-brightness-max': 1.0, 'raster-brightness-min': -0.1 } })
 }
 
 export function destroyMap(): void {

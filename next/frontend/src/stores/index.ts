@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type LayerKey = 'sargassum' | 'drift' | 'marine'
-export type ToggleKey = LayerKey | 'satelliteBasemap' | 'oceanFlow'
+export type ToggleKey = LayerKey | 'satelliteBasemap' | 'oceanFlow' | 'coastalRisk'
 
 interface LayersState {
   sargassum: boolean
@@ -10,6 +10,7 @@ interface LayersState {
   marine: boolean
   satelliteBasemap: boolean
   oceanFlow: boolean
+  coastalRisk: boolean
   toggle: (key: ToggleKey) => void
 }
 
@@ -21,6 +22,7 @@ export const useLayers = create<LayersState>()(
       marine: true,
       satelliteBasemap: true,
       oceanFlow: false,
+      coastalRisk: false,
       toggle: (key) =>
         set((s) => {
           switch (key) {
@@ -34,6 +36,8 @@ export const useLayers = create<LayersState>()(
               return { satelliteBasemap: !s.satelliteBasemap }
             case 'oceanFlow':
               return { oceanFlow: !s.oceanFlow }
+            case 'coastalRisk':
+              return { coastalRisk: !s.coastalRisk }
           }
         }),
     }),

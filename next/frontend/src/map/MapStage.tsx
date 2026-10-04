@@ -6,7 +6,9 @@ import { useDetections, useDrift, useMarineAlerts, useIngestionStatus } from '..
 import { useLayers as useLayerStore, useTimeline } from '../stores'
 import EmptyStateOverlay from '../components/EmptyStateOverlay'
 import MapInspectorBridge from './MapInspectorBridge'
+import MapCameraBridge from './MapCameraBridge'
 import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
 
 type Data = FeatureCollection<Record<string, unknown>>
 
@@ -47,6 +49,19 @@ export default function MapStage() {
   const drift = useDrift()
   const marine = useMarineAlerts()
   const status = useIngestionStatus()
+  const [scanActive, setScanActive] = useState(false)
+  const scanFired = useRef(false)
+
+  // Satellite scan sweep: single pulse when the first detections dataset arrives.
+  useEffect(() => {
+    if (!detections.isSuccess || scanFired.current) return
+    scanFired.current = true
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) return
+    setScanActive(true)
+    const t0 = window.setTimeout(() => setScanActive(false), 1500)
+    return () => window.clearTimeout(t0)
+  }, [detections.isSuccess])
 
   useEffect(() => {
     const el = containerRef.current
@@ -137,8 +152,22 @@ export default function MapStage() {
   return (
     <div ref={containerRef} className="sak-map-container" role="application" aria-label={t('layers.layersTitle') as string}>
       <MapInspectorBridge />
-      {/* subtle ocean-atmosphere vignette (does not block map interaction) */}
+      <MapCameraBridge />
+      {/* V3 ocean atmosphere: bathymetric depth field, caustics, currents, coast glow, vignette */}
+      <div className="sak-atmo-bathy" aria-hidden="true" />
+      <div className="sak-atmo-caustics" aria-hidden="true" />
+      <div className="sak-atmo-currents" aria-hidden="true" />
+      <div className="sak-atmo-coast" aria-hidden="true" />
       <div className="sak-vignette" aria-hidden="true" />
+      {scanActive && (
+        <motion.div
+          className="sak-scan-sweep"
+          initial={{ top: '12%', opacity: 0 }}
+          animate={{ top: ['38%', '78%'], opacity: [0, 0.9, 0] }}
+          transition={{ duration: 1.4, ease: 'easeInOut' }}
+          aria-hidden="true"
+        />
+      )}
       {!ready && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <span className="animate-pulse text-sm text-cyan-100/70">{t('loading.initializing')}</span>
