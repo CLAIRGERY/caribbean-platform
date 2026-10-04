@@ -1,17 +1,36 @@
 import maplibregl, { type Map, type StyleSpecification } from 'maplibre-gl'
 
-export const CARIBBEAN_CENTER: [number, number] = [-61.5, 15.5]
-export const DEFAULT_ZOOM = 6.2
+export const CARIBBEAN_CENTER: [number, number] = [-61.35, 15.15]
+export const DEFAULT_ZOOM = 7.7
 
-const ESRI_TILES = [
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+/**
+ * Basemap sources (all verified reachable from runtime; no private keys):
+ *  - satellite: NASA GIBS BlueMarble ShadedRelief+Bathymetry (public WMTS, 8 levels)
+ *  - standard:  CARTO dark_all raster (readable dark cartography)
+ *  - fallback:  OSM raster
+ */
+const GIBS_SATELLITE = [
+  'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/BlueMarble_ShadedRelief_Bathymetry/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
 ]
-const OSM_TILES = ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
+const CARTO_DARK = [
+  'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+  'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+  'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+]
 
-function rasterSource(satellite: boolean) {
+
+interface RasterSpec {
+  type: 'raster'
+  tiles: string[]
+  tileSize: number
+  attribution: string
+  maxzoom?: number
+}
+
+function rasterSource(satellite: boolean): RasterSpec {
   return satellite
-    ? { type: 'raster' as const, tiles: ESRI_TILES, tileSize: 256, attribution: 'Esri, Maxar, Earthstar Geographics' }
-    : { type: 'raster' as const, tiles: OSM_TILES, tileSize: 256, attribution: '&copy; OpenStreetMap contributors' }
+    ? { type: 'raster', tiles: GIBS_SATELLITE, tileSize: 256, attribution: 'NASA EOSDIS GIBS / BlueMarble', maxzoom: 8 }
+    : { type: 'raster', tiles: CARTO_DARK, tileSize: 256, attribution: '&copy; CARTO &copy; OpenStreetMap contributors' }
 }
 
 export function buildStyle(satellite: boolean): StyleSpecification {
@@ -22,7 +41,7 @@ export function buildStyle(satellite: boolean): StyleSpecification {
     },
     layers: [
       { id: 'bg', type: 'background', paint: { 'background-color': '#04122A' } },
-      { id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 1, 'raster-brightness-max': 1.0, 'raster-brightness-min': -0.1 } },
+      { id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 1 } },
     ],
   }
 }
@@ -56,7 +75,7 @@ export function setBasemapSatellite(map: Map, satellite: boolean): void {
   map.removeLayer('basemap')
   map.removeSource('basemap')
   map.addSource('basemap', rasterSource(satellite))
-  map.addLayer({ id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 1, 'raster-brightness-max': 1.0, 'raster-brightness-min': -0.1 } })
+  map.addLayer({ id: 'basemap', type: 'raster', source: 'basemap', paint: { 'raster-opacity': 1 } })
 }
 
 export function destroyMap(): void {

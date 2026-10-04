@@ -20,7 +20,7 @@ export const useLayers = create<LayersState>()(
       sargassum: true,
       drift: true,
       marine: true,
-      satelliteBasemap: true,
+      satelliteBasemap: false,
       oceanFlow: false,
       coastalRisk: false,
       toggle: (key) =>

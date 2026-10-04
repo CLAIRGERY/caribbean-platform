@@ -8,6 +8,7 @@ import { deriveConnState } from '../lib/connState'
 import { MarineStatusOrb, type OrbState } from './premium'
 import LangSwitch from './LangSwitch'
 import StatusBanner from './StatusBanner'
+import { USE_TEST_FIXTURES } from '../lib/api'
 import TelemetryStrip from './TelemetryStrip'
 import { useUI, useLayers, useSelection } from '../stores'
 
@@ -108,6 +109,16 @@ export default function Header() {
             </h1>
             <p className="sak-kicker hidden truncate sm:block">{t('brand.tagline')}</p>
           </div>
+
+          {USE_TEST_FIXTURES && (
+            <span
+              className="hidden sm:flex items-center px-2 py-0.5 rounded-md"
+              style={{ background: 'rgba(240,180,77,0.15)', border: '1px solid rgba(240,180,77,0.4)', color: '#F0C573', fontSize: 9, letterSpacing: '0.18em' }}
+              title="DEV TEST FIXTURES ACTIVE"
+            >
+              TEST DATA
+            </span>
+          )}
 
           <div className="ml-1 flex items-center gap-2 px-2" title={orbFull}>
             <MarineStatusOrb state={orb} size={10} />

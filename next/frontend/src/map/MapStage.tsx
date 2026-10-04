@@ -66,11 +66,18 @@ export default function MapStage() {
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const map = initMap(el, true)
-    map.once('load', () => {
+    const map = initMap(el, useLayerStore.getState().satelliteBasemap)
+    const markReady = () => {
+      if (readyRef.current) return
       readyRef.current = true
       setReady(true)
-    })
+      map.resize()
+    }
+    // 'load' is the clean signal; fall back to 'idle' or first tick in case of blocked style events
+    map.once('load', markReady)
+    map.once('idle', markReady)
+    map.on('styleimagemissing', markReady)
+    window.setTimeout(markReady, 2500)
     const onResize = () => map.resize()
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onResize)
