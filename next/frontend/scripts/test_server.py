@@ -37,6 +37,9 @@ API_ROUTES: dict[str, Any] = {
     "/api/v1/weathernext/marine-alerts/latest": load_fixture("marine.json", EMPTY_FC),
 }
 
+# Raw fixture file access for VITE_USE_TEST_FIXTURES=true (fetches /scripts/fixtures/<name>)
+FIXTURE_PREFIX = "/scripts/fixtures/"
+
 HEALTH = {"status": "ok"}
 
 
@@ -51,6 +54,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if self.path == "/health":
             self._json(HEALTH)
             return
+        if self.path.startswith(FIXTURE_PREFIX):
+            name = self.path[len(FIXTURE_PREFIX):]
+            f = FIXTURES / name
+            if f.exists():
+                self._json(json.loads(f.read_text()))
+                return
         super().do_GET()
 
     def _json(self, payload: Any) -> None:

@@ -1,36 +1,30 @@
 {
-  "TEST FIXTURE": "SaKgaZe detections — representative Sentinel-2 polygon patches in the Caribbean around Guadeloupe/Martinique. NOT production data. Mirrors backend /api/v1/sakgaze/detections/latest schema only.",
+  "TEST FIXTURE": "SaKgaZe detections — TEST FIXTURES ONLY, positioned around Guadeloupe/Dominica/Martinique/Saint Lucia so they are visible at the default Caribbean framing. Never shipped in production.",
   "type": "FeatureCollection",
   "features": [
     {
       "type": "Feature",
       "id": "d1",
-      "geometry": { "type": "Polygon", "coordinates": [[[-61.62, 15.42], [-61.49, 15.45], [-61.44, 15.36], [-61.58, 15.33], [-61.62, 15.42]]] },
-      "properties": { "acquisition_date": "2026-09-30T10:12:00Z", "surface_km2": 34.2, "density": 0.72, "density_score": 0.82, "source": "COPERNICUS", "external_id": "S2_20260930_011" }
+      "geometry": {"type":"Polygon","coordinates":[[[-61.62,15.10],[-61.38,15.14],[-61.30,15.04],[-61.46,14.98],[-61.62,15.10]]]},
+      "properties": {"acquisition_date":"2026-10-02T10:12:00Z","surface_km2":18.4,"density":0.35,"density_score":0.42,"source":"SENTINEL-2","external_id":"S2_TF_001"}
     },
     {
       "type": "Feature",
       "id": "d2",
-      "geometry": { "type": "MultiPolygon", "coordinates": [[[[ -60.95, 14.86], [-60.72, 14.90], [-60.68, 14.79], [-60.92, 14.75], [-60.95, 14.86]]], [[[ -60.55, 14.66], [-60.40, 14.68], [-60.42, 14.61], [-60.53, 14.60], [-60.55, 14.66]]]] },
-      "properties": { "acquisition_date": "2026-10-01T14:02:00Z", "surface_km2": 78.5, "density": 0.55, "density_score": 0.64, "source": "COPERNICUS", "external_id": "S2_20261001_044" }
+      "geometry": {"type":"MultiPolygon","coordinates":[[[[-61.75,15.55],[-61.45,15.60],[-61.38,15.48],[-61.65,15.42],[-61.75,15.55]]],[[[-61.15,14.70],[-60.90,14.74],[-60.86,14.60],[-61.10,14.56],[-61.15,14.70]]]]},
+      "properties": {"acquisition_date":"2026-10-02T14:02:00Z","surface_km2":46.7,"density":0.68,"density_score":0.68,"source":"SENTINEL-2","external_id":"S2_TF_002"}
     },
     {
       "type": "Feature",
       "id": "d3",
-      "geometry": { "type": "Polygon", "coordinates": [[[-62.30, 16.45], [-62.05, 16.48], [-62.02, 16.36], [-62.28, 16.34], [-62.30, 16.45]]] },
-      "properties": { "acquisition_date": "2026-09-28T11:47:00Z", "surface_km2": 12.8, "density": 0.30, "density_score": 0.36, "source": "COPERNICUS", "external_id": "S2_20260928_002" }
+      "geometry": {"type":"Polygon","coordinates":[[[-61.05,14.20],[-60.75,14.26],[-60.68,14.12],[-60.90,14.05],[-61.05,14.20]]]},
+      "properties": {"acquisition_date":"2026-10-02T15:30:00Z","surface_km2":24.9,"density":0.85,"density_score":0.86,"source":"SENTINEL-2","external_id":"S2_TF_003"}
     },
     {
       "type": "Feature",
       "id": "d4",
-      "geometry": { "type": "Polygon", "coordinates": [[[-61.05, 14.05], [-60.80, 14.10], [-60.78, 14.00], [-61.02, 13.97], [-61.05, 14.05]]] },
-      "properties": { "acquisition_date": "2026-10-02T15:30:00Z", "surface_km2": 155.3, "density": 0.91, "density_score": 0.95, "source": "COPERNICUS", "external_id": "S2_20261002_078" }
-    },
-    {
-      "type": "Feature",
-      "id": "d5",
-      "geometry": { "type": "Polygon", "coordinates": [[[-60.20, 15.85], [-59.98, 15.88], [-59.96, 15.79], [-60.18, 15.77], [-60.20, 15.85]]] },
-      "properties": { "acquisition_date": "2026-10-02T15:30:00Z", "surface_km2": 21.4, "density": 0.48, "density_score": 0.51, "source": "COPERNICUS", "external_id": "S2_20261002_112" }
+      "geometry": {"type":"Polygon","coordinates":[[[-60.85,14.62],[-60.55,14.65],[-60.50,14.53],[-60.78,14.49],[-60.85,14.62]]]},
+      "properties": {"acquisition_date":"2026-10-01T15:30:00Z","surface_km2":11.3,"density":0.30,"density_score":0.36,"source":"SENTINEL-2","external_id":"S2_TF_004"}
     }
   ]
 }

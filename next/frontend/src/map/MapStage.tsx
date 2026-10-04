@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FeatureCollection } from '../types/geo'
-import { initMap, getMap, setBasemapSatellite, destroyMap } from './index'
+import { initMap, getMap, setImageryVisible, destroyMap } from './index'
 import { addSargassumLayer, addDriftLayer, addMarineLayer, setLayerVisibility, setSourceData, SRC } from './layers'
 import { useDetections, useDrift, useMarineAlerts, useIngestionStatus } from '../hooks/useLayers'
 import { useLayers as useLayerStore, useTimeline } from '../stores'
@@ -66,7 +66,8 @@ export default function MapStage() {
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const map = initMap(el, useLayerStore.getState().satelliteBasemap)
+    const satelliteOn = useLayerStore.getState().satelliteBasemap
+    const map = initMap(el, satelliteOn)
     const markReady = () => {
       if (readyRef.current) return
       readyRef.current = true
@@ -74,9 +75,11 @@ export default function MapStage() {
       map.resize()
     }
     // 'load' is the clean signal; fall back to 'idle' or first tick in case of blocked style events
-    map.once('load', markReady)
+    map.once('load', () => {
+      markReady()
+      setImageryVisible(map, satelliteOn)
+    })
     map.once('idle', markReady)
-    map.on('styleimagemissing', markReady)
     window.setTimeout(markReady, 2500)
     const onResize = () => map.resize()
     window.addEventListener('resize', onResize)
@@ -138,11 +141,11 @@ export default function MapStage() {
     setLayerVisibility(map, ['marine-fill', 'marine-stroke'], layerStore.marine)
   }, [layerStore.sargassum, layerStore.drift, layerStore.marine, ready])
 
-  // Basemap
+  // Imagery (Satellite toggle)
   useEffect(() => {
     const map = getMap()
     if (!map || !ready) return
-    setBasemapSatellite(map, layerStore.satelliteBasemap)
+    setImageryVisible(map, layerStore.satelliteBasemap)
   }, [layerStore.satelliteBasemap, ready])
 
   const anyFilterActive = timeline.range.from !== null || timeline.range.to !== null

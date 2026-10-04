@@ -126,7 +126,7 @@ export default function LayerControl({ embedded = false }: { embedded?: boolean 
       <InstrumentRow
         on={layers.satelliteBasemap}
         toggler={() => layers.toggle('satelliteBasemap')}
-        labelSource="ESRI"
+        labelSource="NASA"
         labelTitle={t('layers.satellite') as string}
         labelSubtitle="IMAGERY"
         glow={OCEAN.seaglass}

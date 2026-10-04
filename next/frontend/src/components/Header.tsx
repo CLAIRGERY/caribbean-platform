@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import logo from '../assets/brand/logo-sakgaze.png'
-import { useIngestionStatus } from '../hooks/useLayers'
+import { useIngestionStatus } from '../hooks/useLayers'  // retained for future telemetry surfaces
 import { useDetections, useDrift, useMarineAlerts } from '../hooks/useLayers'
 import { deriveConnState } from '../lib/connState'
 import { MarineStatusOrb, type OrbState } from './premium'
@@ -21,7 +21,7 @@ function connToOrb(c: string): OrbState {
 /** Iconic floating instrumentation bar (premium V2 header). */
 export default function Header() {
   const { t } = useTranslation()
-  const statusQ = useIngestionStatus()
+  void useIngestionStatus() // keep query mounted (refresh timing shared with other layers)
   const det = useDetections()
   const drf = useDrift()
   const mar = useMarineAlerts()
@@ -67,26 +67,9 @@ export default function Header() {
             ? (t('status.degraded') as string)
             : (t('status.offline') as string)
 
-  const showStatusNote = statusQ.isError || conn === 'offline' || conn === 'degraded'
-
   return (
     <>
-      {showStatusNote && (
-        <div className="pointer-events-auto absolute left-1/2 top-20 z-40 mx-auto w-fit">
-          <div className="sak-glass flex items-center gap-2 px-3 py-2 text-[11px] text-amber-200/90">
-            <span aria-hidden>⚠️</span>
-            <span>{orbFull}</span>
-            <button
-              type="button"
-              className="ml-1 rounded-md px-2 py-0.5 text-cyan-200 underline-offset-2 hover:underline"
-              onClick={() => statusQ.refetch()}
-            >
-              {t('status.retry')}
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Single consolidated outage / degraded banner lives in StatusBanner. */}
       <StatusBanner expanded={false} />
 
       <header className="pointer-events-none absolute inset-x-0 top-0 z-40 p-3 sm:p-4">
