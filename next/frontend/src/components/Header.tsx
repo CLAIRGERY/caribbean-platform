@@ -113,6 +113,21 @@ export default function Header() {
             <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55 md:inline">
               {orbLabel}
             </span>
+            {/* per-source telemetry (desktop only) */}
+            <span className="ml-2 hidden items-center gap-1 lg:flex">
+              {[
+                { ok: det.isSuccess, tip: 'SENTINEL-2', c: '#67E8F9' },
+                { ok: drf.isSuccess, tip: 'OPEN-METEO', c: '#F59E0B' },
+                { ok: mar.isSuccess, tip: 'WEATHERNEXT', c: '#FF6D4D' },
+              ].map((m, i) => (
+                <span
+                  key={i}
+                  title={m.tip}
+                  className="h-1.5 w-6 rounded-full"
+                  style={{ background: m.ok ? m.c : 'rgba(255,255,255,0.12)', boxShadow: m.ok ? `0 0 6px ${m.c}88` : 'none' }}
+                />
+              ))}
+            </span>
           </div>
 
           <div className="ml-auto flex items-center gap-2">

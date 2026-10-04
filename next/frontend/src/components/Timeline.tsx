@@ -88,16 +88,32 @@ export default function Timeline() {
           </span>
           <span className="sak-kicker">{t('timeline.forecast')}</span>
         </div>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={sliderPos}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="sak-timeline-slider w-full"
-          aria-label={t('timeline.title') as string}
-        />
+        <div className="relative">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={sliderPos}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="sak-timeline-slider w-full"
+            aria-label={t('timeline.title') as string}
+          />
+          {/* glowing current-time notch */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute"
+            style={{
+              left: `calc(${Math.min(100, Math.max(0, sliderPos))}% - 1px)`,
+              top: -6,
+              width: 2,
+              height: 18,
+              borderRadius: 1,
+              background: '#EAF6FF',
+              boxShadow: '0 0 10px #67E8F9, 0 0 22px rgba(103,232,249,.5)',
+            }}
+          />
+        </div>
       </div>
     </motion.div>
   )

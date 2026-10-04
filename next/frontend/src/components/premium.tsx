@@ -45,6 +45,7 @@ export function ThreeGlassPanel({
       style={style}
     >
       {children}
+      <FlowBorder active={strong} />
     </div>
   )
 }

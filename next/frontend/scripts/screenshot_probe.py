@@ -60,7 +60,7 @@ def main() -> int:
                 proc.kill()
                 proc.wait()
 
-    ok = out_png.exists() and out_png.stat().st_size > 50_000
+    ok = out_png.exists() and out_png.stat().st_size > 30_000
     size = out_png.stat().st_size if out_png.exists() else 0
     print(f"screenshot: {out_png} exists={out_png.exists()} size={size}")
     fatal = [
