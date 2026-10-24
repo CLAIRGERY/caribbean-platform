@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
 from app.core.errors import DatabaseNotConfigured
+from app.database.url import normalize_database_url
 
 logger = logging.getLogger("sakgaze.api.db")
 
@@ -33,7 +34,7 @@ def get_engine() -> Engine:
         raise DatabaseNotConfigured("DATABASE_URL is not configured")
 
     _engine = create_engine(
-        settings.database_url,
+        normalize_database_url(settings.database_url),
         pool_pre_ping=True,
         pool_recycle=1800,
         pool_size=settings.db_pool_size,

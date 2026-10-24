@@ -41,6 +41,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
+from backend.src.db_url import normalize_database_url
+
 LOCK_TIMEOUT = os.getenv("SAKGAZE_DDL_LOCK_TIMEOUT", "5s")
 STATEMENT_TIMEOUT = os.getenv("SAKGAZE_DDL_STATEMENT_TIMEOUT", "60s")
 STALE_BLOCKER_SECONDS = int(os.getenv("SAKGAZE_STALE_BLOCKER_SECONDS", "60"))
@@ -96,7 +98,7 @@ def redacted_dsn(url: str) -> str:
 def make_engine() -> Engine:
     """AUTOCOMMIT engine: required for CREATE INDEX CONCURRENTLY."""
     return create_engine(
-        database_url(),
+        normalize_database_url(database_url()),
         isolation_level="AUTOCOMMIT",
         pool_pre_ping=True,
         connect_args={"connect_timeout": 10, "application_name": "sakgaze-db-admin"},

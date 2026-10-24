@@ -10,6 +10,8 @@ from sqlalchemy import create_engine, event, Column, Integer, String, Float, Dat
 from sqlalchemy.orm import declarative_base, sessionmaker
 from geoalchemy2 import Geometry
 
+from backend.src.db_url import normalize_database_url
+
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 if not DATABASE_URL:
@@ -18,7 +20,7 @@ if not DATABASE_URL:
     DATABASE_URL = _FALLBACK_URL
 
 engine = create_engine(
-    DATABASE_URL,
+    normalize_database_url(DATABASE_URL),
     pool_pre_ping=True,
     pool_recycle=1800,
     connect_args={
