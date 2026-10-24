@@ -93,6 +93,13 @@ def _status_payload(request: Request, session: Optional[Session]) -> Dict[str, A
 # ---------------------------------------------------------------------------
 # v2 canonical
 # ---------------------------------------------------------------------------
+@router.get("/health", summary="Versioned health alias")
+def v2_health() -> Dict[str, Any]:
+    """The frontend composes paths from VITE_API_BASE_URL (…/api/v1 or …/api/v2),
+    so ``/health`` must exist under each version prefix, not only at the root."""
+    return {"status": "ok", "service": "sakgaze-api-v2", "version": API_VERSION}
+
+
 @router.get("/status", summary="Scientific freshness + ingestion ledger")
 def status(request: Request,
            session: Optional[Session] = Depends(get_optional_session)) -> Dict[str, Any]:
@@ -184,6 +191,11 @@ def v1_alerts(
 ) -> Response:
     return _layer_response(request, session, "alerts",
                            days=days, limit=limit, offset=offset, bbox=bbox, until=until)
+
+
+@compat.get("/health")
+def v1_health() -> Dict[str, Any]:
+    return v2_health()
 
 
 @compat.get("/ingestion/status")
