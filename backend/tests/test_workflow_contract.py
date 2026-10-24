@@ -18,6 +18,8 @@ regression even on the legacy copy).
 import os
 import re
 
+import pytest
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIVE = os.path.join(ROOT, ".github", "workflows", "sakgaze-ingestion.yml")
 TEMPLATE = os.path.join(ROOT, "infrastructure", "github-actions", "sakgaze-ingestion.yml")
@@ -38,6 +40,17 @@ def test_a_workflow_file_exists():
     assert os.path.isfile(TEMPLATE), (
         "the corrected workflow template must ship in infrastructure/github-actions/"
     )
+
+
+def test_live_workflow_matches_the_template():
+    """Once installed, the executed file must be byte-identical to the declared one.
+
+    While the `workflow` OAuth scope was missing they legitimately differed (the
+    template could not be pushed); after installation any divergence is drift.
+    """
+    if "db_admin" not in _read(LIVE):
+        pytest.skip("template not installed yet (workflow scope pending)")
+    assert _read(LIVE) == _read(TEMPLATE)
 
 
 def test_single_concurrency_group_without_cancel():
