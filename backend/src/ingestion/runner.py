@@ -78,6 +78,9 @@ def db_preflight() -> Dict[str, Any]:
         from backend.src.database import engine
 
         with engine.connect() as conn:
+            # The API bound (8 s) is too tight for pg_stat_activity with
+            # pg_blocking_pids() on a busy pooler; give the diagnostic headroom.
+            conn.execute(text("SET statement_timeout = '25s'"))
             out["server_version"] = conn.execute(text("SHOW server_version")).scalar()
             rows = conn.execute(text(
                 """
