@@ -47,7 +47,10 @@ env:
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Measured: 6 min (green, 15:33Z) and 11.5 min (idempotency run, 15:41Z) where
+    # Open-Meteo marine calls retried for 404 s. 25 min keeps a slow upstream from
+    # turning into a false "failure" notification.
+    timeout-minutes: 25
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       CDSE_USERNAME: ${{ secrets.CDSE_USERNAME }}

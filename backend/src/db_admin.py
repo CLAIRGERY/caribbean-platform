@@ -164,7 +164,7 @@ def _blockers(conn) -> List[Dict[str, Any]]:
     return [dict(r._mapping) for r in conn.execute(sql, {"stale": STALE_BLOCKER_SECONDS}).all()]
 
 
-def inspect(engine: Engine, *, terminate: bool = False) -> Dict[str, Any]:
+def inspect(engine: Engine, *, terminate: bool = False, exact_counts: bool = False) -> Dict[str, Any]:
     report: Dict[str, Any] = {
         "dsn": redacted_dsn(engine.url.render_as_string(hide_password=True)),
         "checked_at": datetime.now(timezone.utc).isoformat(),
@@ -185,7 +185,7 @@ def inspect(engine: Engine, *, terminate: bool = False) -> Dict[str, Any]:
                 "exists": bool(cols),
                 "columns": cols,
                 "indexes": _index_names(conn, table) if cols else [],
-                "rows": _row_count(conn, table) if cols else 0,
+                "rows": (_exact_row_count(conn, table) if exact_counts else _row_count(conn, table)) if cols else 0,
             }
 
         blockers = _blockers(conn)
@@ -196,9 +196,25 @@ def inspect(engine: Engine, *, terminate: bool = False) -> Dict[str, Any]:
 
 
 def _row_count(conn, table: str) -> Optional[int]:
+    """Approximate row count from the planner statistics.
+
+    An exact ``COUNT(*)`` on the science tables took ~2.5 minutes of the CI step
+    (2026-10-24), which is pure overhead for a diagnostic. ``reltuples`` is free
+    and precise enough to spot an empty or unexpectedly large table; pass
+    ``--exact-counts`` when the real number matters.
+    """
     try:
-        # exact counts are acceptable here: this runs on a maintenance cadence,
-        # not on the API request path.
+        row = conn.execute(text(
+            "SELECT reltuples::bigint FROM pg_class "
+            "WHERE oid = to_regclass(current_schema() || '.' || :t)"
+        ), {"t": table}).scalar()
+        return int(row) if row is not None and int(row) >= 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _exact_row_count(conn, table: str) -> Optional[int]:
+    try:
         return int(conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar() or 0)
     except Exception:  # noqa: BLE001
         return None
@@ -284,6 +300,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--terminate-blockers", action="store_true", help="kill sessions stuck on locks")
     parser.add_argument("--migrate", action="store_true", help="apply additive schema changes")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument("--exact-counts", action="store_true",
+                        help="exact COUNT(*) per table (slow); defaults to planner estimates")
     parser.add_argument("--github-summary", action="store_true", help="append a summary to $GITHUB_STEP_SUMMARY")
     args = parser.parse_args(argv)
 
@@ -296,7 +314,8 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     try:
         if args.inspect or args.terminate_blockers:
-            payload["inspection"] = inspect(engine, terminate=args.terminate_blockers)
+            payload["inspection"] = inspect(engine, terminate=args.terminate_blockers,
+                                           exact_counts=args.exact_counts)
         if args.migrate:
             payload["migration"] = migrate(engine)
             if not payload["migration"]["ok"]:
