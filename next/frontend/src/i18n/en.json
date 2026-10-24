@@ -1,0 +1,123 @@
+{
+  "app": {
+    "brand": {
+      "title": "SaKgaZé",
+      "tagline": "Sargassum surveillance · Caribbean"
+    },
+    "status": {
+      "connecting": "Connecting…",
+      "waking": "Waking service…",
+      "live": "Live data",
+      "liveShort": "LIVE",
+      "syncShort": "SYNCING",
+      "degraded": "Degraded service",
+      "degradedShort": "DEGRADED",
+      "offline": "Service unavailable",
+      "offlineShort": "OFFLINE",
+      "retry": "Retry",
+      "freshness": "Data freshness",
+      "lastIngestion": "Last ingestion",
+      "never": "Never"
+    },
+    "telemetry": {
+      "satellite": "Satellite",
+      "satelliteOk": "Updated",
+      "drift": "Drift",
+      "driftOk": "Synchronized",
+      "marine": "Marine",
+      "marineOk": "Updated",
+      "stale": "Stale",
+      "pending": "PENDING"
+    },
+    "layers": {
+      "sargassum": "Sargassum",
+      "drift": "Drift",
+      "marine": "Coastal alerts",
+      "satellite": "NASA imagery",
+      "oceanFlow": "Ocean flow",
+      "show": "Show",
+      "hide": "Hide",
+      "layersTitle": "Data layers"
+    },
+    "timeline": {
+      "title": "Timeline",
+      "now": "Now",
+      "observation": "Observation",
+      "forecast": "Forecast",
+      "latestAcquisition": "Latest acquisition",
+      "reset": "Reset",
+      "filterActive": "Time filter active",
+      "hiddenByFilter": "The view is hidden by the time filter.",
+      "waiting": "WAITING FOR SYNC"
+    },
+    "inspector": {
+      "title": "Inspector",
+      "empty": "Click a sargassum patch, trajectory or sector to inspect its data.",
+      "surface": "Surface",
+      "density": "Density",
+      "densityLow": "Low",
+      "densityMedium": "Moderate",
+      "densityHigh": "High",
+      "acquisitionDate": "Acquisition",
+      "horizon": "Horizon",
+      "source": "Source",
+      "alertLevel": "Level",
+      "sector": "Sector",
+      "wind": "Wind",
+      "swell": "Swell",
+      "eta": "ETA",
+      "velocity": "Speed",
+      "issued": "Issued",
+      "close": "Close inspector",
+      "sectorPlural": "sectors"
+    },
+    "alerts": {
+      "level": {
+        "normal": "Normal",
+        "watch": "Watch",
+        "warning": "Warning",
+        "critical": "Critical",
+        "smallcraft": "Small craft",
+        "advisory": "Advisory"
+      }
+    },
+    "empty": {
+      "noObservations": "No recent observations",
+      "waitingIngestion": "SaKgaZé is waiting for the next satellite synchronization.",
+      "offlineHint": "Data will appear once the service is back online."
+    },
+    "errors": {
+      "retryOnce": "Retry",
+      "layerFailed": "Layer unavailable"
+    },
+    "loading": {
+      "initializing": "Initializing map…",
+      "mapReady": "Map ready"
+    },
+    "oceanFlow": {
+      "enable": "Enable ocean flow",
+      "disable": "Disable ocean flow",
+      "loading": "Loading ocean flow…",
+      "failed": "Ocean flow unavailable on this device"
+    },
+    "map": {
+      "attribution": "Attribution"
+    },
+    "a11y": {
+      "menu": "Menu",
+      "language": "Language",
+      "close": "Close",
+      "ocean": "Ocean",
+      "info": "About"
+    },
+    "about": {
+      "title": "SaKgaZé",
+      "tagline": "Sargassum surveillance · Caribbean",
+      "body": "SaKgaZé combines Sentinel-2 satellite imagery with drift modelling (wind and ocean currents) to anticipate sargassum strandings on Caribbean shores.",
+      "sourceLabel": "Source"
+    },
+    "intro": {
+      "skip": "Skip"
+    }
+  }
+}

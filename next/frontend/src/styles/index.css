@@ -1,0 +1,507 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   SaKgaZé V2 — oceanographic instrument design tokens & surfaces.
+   Guaranteed app-shell height so MapLibre can never collapse to zero height.
+   --------------------------------------------------------------------------- */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* Map-first app: the document itself never scrolls. Without this, the
+     `.sak-atmo-caustics` layer (inset: -50%) makes the page horizontally
+     scrollable at desktop/tablet widths. */
+  overflow: hidden;
+}
+
+:root {
+  --sak-abyss: #04122a;
+  --sak-midnight: #0a1e3f;
+  --sak-deepsea: #0e2a4d;
+  --sak-cyan: #22d3ee;
+  --sak-cyan-glow: #67e8f9;
+  --sak-seaglass: #7de2c3;
+  --sak-lagoon: #2dd4a7;
+  --sak-biolume: #8b7cf6;
+  --sak-gold: #d4a94e;
+  --sak-ochre: #c98b32;
+  --sak-rust: #b45309;
+  --sak-amber: #f59e0b;
+  --sak-coral: #ff6d4d;
+}
+
+body {
+  background: radial-gradient(120% 90% at 20% 0%, #0a1e3f 0%, #04122a 55%, #020a18 100%);
+  color: #e7eef7;
+  font-family: Inter, system-ui, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sak-stage {
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+  /* clip the oversized atmosphere layers (caustics use inset: -50%) so they can
+     never create document overflow or a horizontal scrollbar */
+  overflow: hidden;
+}
+
+/* glass instrumentation surface */
+.sak-glass {
+  position: relative;
+  background:
+    linear-gradient(160deg, rgba(10, 30, 63, 0.78) 0%, rgba(4, 18, 42, 0.86) 100%);
+  border: 1px solid rgba(103, 232, 249, 0.14);
+  border-radius: 18px;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow:
+    0 12px 44px rgba(2, 8, 20, 0.6),
+    inset 0 1px 0 rgba(148, 233, 255, 0.14),
+    inset 0 -1px 0 rgba(2, 8, 20, 0.4);
+}
+
+.sak-glass--strong {
+  background:
+    linear-gradient(160deg, rgba(14, 42, 77, 0.92) 0%, rgba(4, 18, 42, 0.94) 100%);
+}
+
+/* section kicker label */
+.sak-kicker {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(103, 232, 249, 0.55);
+  font-weight: 600;
+}
+
+/* small muted metadata */
+.sak-meta {
+  font-size: 10px;
+  color: rgba(231, 238, 247, 0.45);
+  letter-spacing: 0.06em;
+}
+
+/* glowing instrument button */
+.sak-glow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(103, 232, 249, 0.16);
+  background: linear-gradient(160deg, rgba(14, 42, 77, 0.7), rgba(4, 18, 42, 0.85));
+  color: rgba(231, 238, 247, 0.75);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.sak-glow-btn:hover {
+  border-color: rgba(103, 232, 249, 0.4);
+  color: #eaf6ff;
+  box-shadow: 0 0 20px rgba(103, 232, 249, 0.12);
+}
+.sak-glow-btn.is-active {
+  color: var(--sak-cyan-glow);
+  border-color: rgba(103, 232, 249, 0.55);
+  box-shadow:
+    0 0 24px rgba(103, 232, 249, 0.22),
+    inset 0 0 14px rgba(103, 232, 249, 0.1);
+}
+
+/* instrument toggle switch (layer control) */
+.sak-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(103, 232, 249, 0.1);
+  background: linear-gradient(160deg, rgba(10, 30, 63, 0.6), rgba(4, 18, 42, 0.7));
+  color: rgba(231, 238, 247, 0.6);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+.sak-toggle:hover {
+  border-color: rgba(103, 232, 249, 0.3);
+}
+.sak-toggle.is-on {
+  color: #f4faff;
+}
+.sak-toggle .sak-toggle-track {
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(103, 232, 249, 0.12);
+  position: relative;
+  flex: none;
+  transition: background 180ms ease;
+}
+.sak-toggle.is-on .sak-toggle-track {
+  background: rgba(103, 232, 249, 0.4);
+}
+.sak-toggle .sak-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(231, 238, 247, 0.65);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms ease,
+    box-shadow 180ms ease;
+}
+.sak-toggle.is-on .sak-toggle-knob {
+  transform: translateX(14px);
+  background: var(--sak-cyan-glow);
+  box-shadow: 0 0 8px var(--sak-cyan-glow);
+}
+
+/* focus visibility */
+:focus-visible {
+  outline: 2px solid #67e8f9;
+  outline-offset: 2px;
+}
+
+/* full-bleed map */
+.sak-map-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* map atmosphere overlay (vignette); must NOT block interaction */
+.sak-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background:
+    radial-gradient(115% 95% at 50% 0%, transparent 62%, rgba(2, 10, 24, 0.32) 100%),
+    radial-gradient(80% 70% at 50% 110%, transparent 62%, rgba(11, 196, 217, 0.07) 100%);
+}
+
+/* sensor scan line (intro) */
+.sak-scanline {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  z-index: 60;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sak-cyan-glow) 30%,
+    #ffffff 50%,
+    var(--sak-cyan-glow) 70%,
+    transparent
+  );
+  box-shadow: 0 0 18px var(--sak-cyan-glow);
+  pointer-events: none;
+}
+
+/* timeline slider: bathymetric gradient ribbon */
+.sak-timeline-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #12345a 0%,
+    var(--sak-cyan) 42%,
+    var(--sak-seaglass) 58%,
+    var(--sak-amber) 80%,
+    var(--sak-coral) 100%
+  );
+  outline: none;
+}
+.sak-timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #eaf6ff;
+  border: 2px solid var(--sak-cyan);
+  box-shadow: 0 0 14px rgba(103, 232, 249, 0.9);
+  cursor: pointer;
+}
+.sak-timeline-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #eaf6ff;
+  border: 2px solid var(--sak-cyan);
+  box-shadow: 0 0 14px rgba(103, 232, 249, 0.9);
+  cursor: pointer;
+}
+.sak-timeline-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #12345a 0%,
+    var(--sak-cyan) 42%,
+    var(--sak-seaglass) 58%,
+    var(--sak-amber) 80%,
+    var(--sak-coral) 100%
+  );
+}
+
+/* screen-reader-only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* live status ping */
+.sak-anim-ping {
+  animation: sakPing 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes sakPing {
+  0% { transform: scale(1); opacity: 0.6; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sak-anim-ping,
+  .sak-panel-flow-border,
+  .sak-data-pulse > span,
+  .sak-toggle .sak-toggle-knob {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================================================
+   SaKgaZé V3 — ocean atmosphere layers
+   ========================================================= */
+
+/* staged bathymetric depth field (behind basemap raster, on bg layer) */
+.sak-atmo-bathy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 110% at 50% 120%, rgba(6, 59, 82, 0.75) 0%, rgba(4, 21, 39, 0.0) 60%),
+    radial-gradient(90% 80% at 85% 15%, rgba(11, 196, 217, 0.10) 0%, rgba(4, 21, 39, 0) 60%),
+    radial-gradient(70% 55% at 15% 25%, rgba(73, 226, 210, 0.06) 0%, transparent 65%);
+  mix-blend-mode: screen;
+}
+
+/* caustic motion: slow moving light ripples via animated gradients */
+.sak-atmo-caustics {
+  position: absolute;
+  inset: -50%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(103,245,226,0.25) 0 2px, transparent 2px 90px),
+    repeating-linear-gradient(65deg, rgba(103,245,226,0.18) 0 2px, transparent 2px 120px);
+  background-size: 320px 320px, 480px 480px;
+  animation: sakCausticsDrift 46s linear infinite;
+  mix-blend-mode: screen;
+  transform: rotate(-2deg);
+}
+@keyframes sakCausticsDrift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 320px 120px, 480px 210px; }
+}
+
+/* current field streaks: gently drifting diagonal cyan filaments */
+.sak-atmo-currents {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image:
+    repeating-linear-gradient(100deg, transparent 0 46px, rgba(11,196,217,0.35) 46px 48px, transparent 48px 120px);
+  background-size: 240px 240px;
+  animation: sakCurrentsFlow 60s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes sakCurrentsFlow {
+  0%   { background-position: 0 0; }
+  100% { background-position: -480px 120px; }
+}
+
+/* coastal glow at horizon */
+.sak-atmo-coast {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(11,196,217,0.14) 0%, transparent 45%),
+    radial-gradient(90% 70% at 80% 90%, rgba(73,226,210,0.10) 0%, transparent 55%);
+  mix-blend-mode: screen;
+}
+
+/* scan sweep (one-shot) */
+.sak-scan-sweep {
+  position: absolute;
+  inset-inline: 0;
+  height: 40vh;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(103,245,226,0.09) 45%, rgba(103,232,249,0.25) 50%, rgba(103,245,226,0.09) 55%, transparent);
+  mix-blend-mode: screen;
+}
+
+/* map surface should show satellite imagery crisp on top of gentle atmosphere */
+.sak-map-container .maplibregl-canvas {
+  filter: saturate(0.85) contrast(1.28) brightness(0.72) hue-rotate(-8deg);
+}
+
+/* telemetry strip */
+.sak-telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.sak-telemetry .sak-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(103,232,249,0.12);
+  color: rgba(231,238,247,0.65);
+}
+.sak-telemetry .sak-telemetry-row strong {
+  color: #EAF6FF;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sak-telemetry .sak-pending {
+  color: rgba(231,238,247,0.30);
+}
+
+/* instrument cluster */
+.sak-instrument {
+  border-radius: 14px;
+  border: 1px solid rgba(103,232,249,0.12);
+  background:
+    linear-gradient(170deg, rgba(10,30,63,0.55) 0%, rgba(4,21,39,0.72) 100%);
+  overflow: hidden;
+}
+.sak-instrument .sak-controller {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-top: 1px solid rgba(103,232,249,0.07);
+  background-image: repeating-linear-gradient(90deg, transparent 0 22px, rgba(103,232,249,0.05) 22px 23px);
+  cursor: pointer;
+  transition: background 140ms ease, box-shadow 140ms ease;
+  min-height: 44px;
+}
+.sak-instrument .sak-controller:hover {
+  background-color: rgba(103,232,249,0.05);
+}
+.sak-instrument .sak-controller.is-active {
+  box-shadow: inset 0 0 18px rgba(103,232,249,0.08);
+}
+.sak-instrument .sak-wave {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 12px;
+}
+.sak-instrument .sak-wave > span {
+  width: 2px;
+  border-radius: 1px;
+  background: var(--glow, #22d3ee);
+}
+
+/* timeline scientific ribbon */
+.sak-timeline-ribbon {
+  height: 26px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(6,59,82,0.5), rgba(6,59,82,0.25));
+  border: 1px solid rgba(103,232,249,0.14);
+}
+.sak-timeline-ribbon .sak-tl-marker {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(231,238,247,0.35);
+  cursor: pointer;
+}
+.sak-timeline-ribbon .sak-tl-marker.is-forecast {
+  background: rgba(240,180,77,0.4);
+}
+
+/* minimap */
+.sak-minimap {
+  position: absolute;
+  left: 14px;
+  bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  width: 148px;
+  aspect-ratio: 1;
+  z-index: 30;
+  pointer-events: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(103,232,249,0.16);
+  box-shadow: 0 8px 26px rgba(2,8,20,0.55);
+  overflow: hidden;
+  background: rgba(4,21,39,0.82);
+  backdrop-filter: blur(14px);
+}
+.sak-minimap .sak-mvp-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sak-atmo-caustics,
+  .sak-atmo-currents {
+    animation: none !important;
+  }
+}
+
+
+/* ---- deterministic canvas stacking ---- */
+.sak-map-container .maplibregl-canvas { z-index: 1; }
+.sak-map-container .maplibregl-canvas-container { z-index: 1; }
+/* Three.js canvases (Ocean Flow / ShaderLayers) must be above MapLibre canvas */
+.sak-map-container > canvas { z-index: 2; }
+/* atmosphere overlays go under imagery and under the map */
+.sak-atmo-bathy, .sak-atmo-caustics, .sak-atmo-currents, .sak-atmo-coast { z-index: 0; }
+.sak-vignette { z-index: 3; }
+.sak-scan-sweep { z-index: 4; }

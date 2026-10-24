@@ -1,0 +1,24 @@
+{
+  "TEST FIXTURE": "SaKgaZe drift — TEST FIXTURES ONLY, visible trajectories within the default Caribbean view. Not production data.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "f1",
+      "geometry": {"type":"LineString","coordinates":[[-61.62,15.10],[-61.55,15.05], [-61.48,15.00],[-61.40,14.95]]},
+      "properties": {"seed_id":"S2_TF_001","forecast_horizon_h":24,"forecast_time":"2026-10-03T10:12:00Z","generated_at":"2026-10-02T10:20:00Z","velocity_kmh":16.2,"source":"OPEN-METEO"}
+    },
+    {
+      "type": "Feature",
+      "id": "f2",
+      "geometry": {"type":"LineString","coordinates":[[-61.15,14.70],[-61.02,14.62],[-60.88,14.55],[-60.72,14.48]]},
+      "properties": {"seed_id":"S2_TF_002","forecast_horizon_h":48,"forecast_time":"2026-10-04T14:02:00Z","generated_at":"2026-10-02T14:10:00Z","velocity_kmh":22.4,"source":"OPEN-METEO"}
+    },
+    {
+      "type": "Feature",
+      "id": "f3",
+      "geometry": {"type":"LineString","coordinates":[[-60.90,14.15],[-60.78,14.10],[-60.66,14.05],[-60.52,14.00]]},
+      "properties": {"seed_id":"S2_TF_003","forecast_horizon_h":24,"forecast_time":"2026-10-03T15:30:00Z","generated_at":"2026-10-02T15:35:00Z","velocity_kmh":18.9,"source":"OPEN-METEO"}
+    }
+  ]
+}

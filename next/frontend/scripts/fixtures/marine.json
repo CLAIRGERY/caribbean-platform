@@ -1,0 +1,23 @@
+{
+  "TEST FIXTURE": "SaKgaZe marine alerts — TEST FIXTURES ONLY, positioned within visible Caribbean sectors. Not production data.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "a1",
+      "geometry": {"type":"Polygon","coordinates":[[[-61.80,15.30],[-61.30,15.28],[-61.30,15.05],[-61.80,15.05]]]},
+      "properties": {"alert_level":"warning","sector":"Guadeloupe côte sud","wind_kmh":42,"wave_height_m":2.4,"issued_at":"2026-10-03T05:00:00Z","source":"WEATHERNEXT"}
+    },
+    {
+      "type": "Feature",
+      "id": "a2",
+      "geometry": {"type":"Polygon","coordinates":[[[-61.20,14.85],[-60.75,14.83],[-60.75,14.45],[-61.20,14.45]]]},
+      "properties": {"alert_level":"watch","sector":"Marin / Sainte-Luce","wind_kmh":33,"wave_height_m":1.8,"issued_at":"2026-10-03T05:00:00Z","source":"WEATHERNEXT"}
+    },
+    {
+      "type": "Feature",
+      "id": "a3",
+      "geometry": {"type":"Point","coordinates":[-60.95,14.42]},"properties": {"alert_level":"smallcraft","sector":"Grande Anse d'Arlet","wind_kmh":26,"wave_height_m":1.0,"issued_at":"2026-10-03T07:00:00Z","source":"WEATHERNEXT"}
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "TEST FIXTURE": "SaKgaZe ingestion status. NOT production data.",
+  "last_run": "2026-10-03T05:30:00Z",
+  "next_run": "2026-10-03T17:30:00Z",
+  "detections_count": 248,
+  "drift_runs_count": 96,
+  "marine_alerts_count": 17,
+  "status": "ok"
+}
