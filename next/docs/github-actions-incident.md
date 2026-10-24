@@ -131,6 +131,21 @@ no database writes):
 * Exit code 11 (`CONFIGURATION_ERROR`) locally — correct: no CDSE credentials on this
   workstation. In CI the secrets are injected, so this path is not expected.
 
+## 5bis. Real workflow runs (evidence trail)
+
+| run | sha | outcome | what it proved |
+|---|---|---|---|
+| `40101224907` | `f333341` | failure, exit 11, 90 s | **DDL deadlock gone** — run reached CDSE, obtained an OAuth token (HTTP 200), streamed bands, vectorised **153 sargassum polygons in 44 s**; then `CONFIGURATION_ERROR — No module named 'psycopg'` |
+| `40101438202` | `540547b` | failure, exit 12, 4 min 45 s | Driver fixed (SQLAlchemy 2.1 + bare URL resolves to psycopg 3). Database reached, then: sargassum `psycopg2.OperationalError: server didn't return client encoding`; drift `SELECT` and marine `INSERT` `canceling statement due to statement timeout` → classified `DATABASE_UNAVAILABLE` |
+| `40101891775` | `02d1a52` | see `state/PROJECT_STATE.md` | adds a read-only DB preflight (server version + lock blockers) and a bounded 60 s batch statement timeout |
+
+Interpretation of run `40101438202`: acquisition and processing are healthy end-to-end
+with the real secrets (CDSE OAuth, S3 band streaming, FAI vectorisation, NOAA NHC storm
+feed, Open-Meteo marine/wind). The remaining failure is on the **database side only**
+(connection-level error for one source, lock/statement timeouts for the other two), which
+is exactly the class the product must report rather than mask. The preflight added in
+`02d1a52` names the cause (paused project vs. stale lock holder) in the CI log.
+
 ## 6. Verification NOT yet performed
 
 **A real GitHub Actions run of the corrected workflow has not been executed.**
