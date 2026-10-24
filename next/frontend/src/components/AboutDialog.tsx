@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { API_BASE_URL } from '../lib/api'
-import logo from '../assets/brand/logo-sakgaze.png'
+import logo from '../assets/brand/logo-sakgaze-512.png'
 
 export default function AboutDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation()

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import logo from '../assets/brand/logo-sakgaze.png'
+import logo from '../assets/brand/logo-sakgaze-512.png'
 import { useHealth } from '../hooks/useLayers'
 import { useDetections, useDrift, useMarineAlerts } from '../hooks/useLayers'
 import { deriveConnState } from '../lib/connState'
@@ -134,7 +134,7 @@ export default function Header() {
               aria-pressed={oceanFlowOn}
               aria-label={t('layers.oceanFlow') as string}
               title={t('layers.oceanFlow') as string}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+              className={`flex h-11 w-11 items-center justify-center rounded-lg ${
                 oceanFlowOn ? 'bg-violet-400/25 text-violet-200' : 'text-cyan-100/70 hover:bg-white/10'
               }`}
             >
@@ -143,7 +143,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setAboutOpen(true)}
-              className="hidden h-10 w-10 items-center justify-center rounded-lg text-cyan-100/70 hover:bg-white/10 sm:flex"
+              className="hidden h-11 w-11 items-center justify-center rounded-lg text-cyan-100/70 hover:bg-white/10 sm:flex"
               aria-label={t('a11y.info') as string}
               title={t('a11y.info') as string}
             >
@@ -152,7 +152,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-cyan-100/90 hover:bg-white/10 md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-cyan-100/90 hover:bg-white/10 md:hidden"
               aria-expanded={menuOpen}
               aria-controls="sak-mobile-menu"
               aria-label={t('a11y.menu') as string}
@@ -208,7 +208,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setAboutOpen(false)}
-                className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-cyan-100/70 hover:bg-white/10"
+                className="ml-auto flex h-11 w-11 items-center justify-center rounded-lg text-cyan-100/70 hover:bg-white/10"
                 aria-label={t('a11y.close') as string}
               >
                 <span aria-hidden>✕</span>

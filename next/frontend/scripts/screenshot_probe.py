@@ -46,7 +46,12 @@ def main() -> int:
                     "--headless",
                     "--disable-gpu",
                     "--no-first-run",
+                    "--hide-scrollbars",
                     f"--window-size={width},{height}",
+                    # --screenshot fires on the load event; virtual time lets the
+                    # React mount + MapLibre first paint + API fixtures settle
+                    # before the frame is captured.
+                    f"--virtual-time-budget={wait_s * 1000}",
                     "--enable-unsafe-swiftshader",
                     f"--screenshot={out_png}",
                     url,

@@ -25,7 +25,7 @@ export default function LangSwitch() {
             setCurrent(lang)
           }}
           aria-pressed={current === lang}
-          className={`min-h-[36px] px-2.5 py-1.5 transition-colors ${
+          className={`min-h-[44px] min-w-[44px] px-2.5 py-1.5 transition-colors ${
             current === lang ? 'bg-cyan-400/20 text-cyan-100' : 'text-white/60 hover:bg-white/5'
           }`}
         >

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'framer-motion'
-import logo from '../assets/brand/logo-sakgaze.png'
+import logo from '../assets/brand/logo-sakgaze-512.png'
 
 const INTRO_KEY = 'sakgaze.intro-seen'
 const EXIT_EVENT = 'sakgaze:intro-exit'

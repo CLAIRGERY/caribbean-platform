@@ -13,6 +13,10 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+  /* Map-first app: the document itself never scrolls. Without this, the
+     `.sak-atmo-caustics` layer (inset: -50%) makes the page horizontally
+     scrollable at desktop/tablet widths. */
+  overflow: hidden;
 }
 
 :root {
@@ -44,6 +48,9 @@ body {
   min-height: 100dvh;
   width: 100%;
   position: relative;
+  /* clip the oversized atmosphere layers (caustics use inset: -50%) so they can
+     never create document overflow or a horizontal scrollbar */
+  overflow: hidden;
 }
 
 /* glass instrumentation surface */
