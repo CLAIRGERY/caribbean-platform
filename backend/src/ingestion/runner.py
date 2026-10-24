@@ -56,10 +56,50 @@ SOURCE_DB_NAME = {
 }
 SOURCE_TS_KEY = {"sargassum": "acquisition_date", "drift": "generated_at", "marine-alerts": "issued_at"}
 
+#: Batch writes may legitimately take longer than an interactive API query.
+#: The API keeps its 8 s bound; ingestion sessions raise it, explicitly and boundedly.
+WRITE_STATEMENT_TIMEOUT = os.getenv("INGESTION_STATEMENT_TIMEOUT", "60s")
+
 
 # ---------------------------------------------------------------------------
 # Per-source execution
 # ---------------------------------------------------------------------------
+def db_preflight() -> Dict[str, Any]:
+    """Read-only database diagnostic, logged once per run.
+
+    Prints the server version and any session currently holding or waiting on a
+    lock, so a `DATABASE_UNAVAILABLE` outcome is actionable from the CI log
+    alone (no shell access to the database needed).
+    """
+    out: Dict[str, Any] = {"ok": False}
+    try:
+        from sqlalchemy import text
+
+        from backend.src.database import engine
+
+        with engine.connect() as conn:
+            out["server_version"] = conn.execute(text("SHOW server_version")).scalar()
+            rows = conn.execute(text(
+                """
+                SELECT pid, state,
+                       EXTRACT(EPOCH FROM (now() - COALESCE(xact_start, query_start)))::int AS age_s,
+                       left(regexp_replace(COALESCE(query, ''), '\\s+', ' ', 'g'), 90) AS query,
+                       cardinality(pg_blocking_pids(pid)) AS waits_for
+                FROM pg_stat_activity
+                WHERE datname = current_database() AND pid <> pg_backend_pid()
+                  AND (state = 'idle in transaction' OR cardinality(pg_blocking_pids(pid)) > 0)
+                ORDER BY age_s DESC
+                LIMIT 10
+                """
+            )).mappings().all()
+            out["blockers"] = [dict(r) for r in rows]
+            out["ok"] = True
+    except Exception as exc:  # noqa: BLE001
+        out["error"] = f"{classify_exception(exc).value}: {exc}"
+    common.logger.info("[DB] preflight: %s", json.dumps(out, default=str))
+    return out
+
+
 def _collector(source: str):
     """Import the collector lazily so a --dry-run never needs a DB driver."""
     if source == "sargassum":
@@ -150,6 +190,12 @@ def run_source(source: str, *, dry_run: bool = False) -> Dict[str, Any]:
         ingester = getattr(crud, ingester_name)
         db = SessionLocal()
         try:
+            from sqlalchemy import text as _sql
+
+            # Batch write bound: the API keeps 8 s, ingestion needs more headroom
+            # but stays explicitly bounded (no unbounded statement).
+            db.execute(_sql(f"SET statement_timeout = '{WRITE_STATEMENT_TIMEOUT}'"))
+            db.execute(_sql("SET lock_timeout = '5s'"))
             result = ingester(db, valid)
         finally:
             db.close()
@@ -245,6 +291,7 @@ def _record_safe(source: str, status: str, **kwargs: Any) -> None:
 # Orchestration
 # ---------------------------------------------------------------------------
 def run(sources: List[str], *, dry_run: bool = False) -> Dict[str, Any]:
+    preflight = None if dry_run else db_preflight()
     results: Dict[str, Any] = {}
     for source in sources:
         results[source] = run_source(source, dry_run=dry_run)
@@ -275,6 +322,7 @@ def run(sources: List[str], *, dry_run: bool = False) -> Dict[str, Any]:
         "ok": not fatal,
         "exit_code": 0 if not fatal else exit_code(overall),
         "ran_at": datetime.now(timezone.utc).isoformat(),
+        "db_preflight": preflight,
         "sources": results,
     }
 
