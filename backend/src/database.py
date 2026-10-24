@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from typing import Generator
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON, Text
+from sqlalchemy import create_engine, event, Column, Integer, String, Float, DateTime, JSON, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from geoalchemy2 import Geometry
 
@@ -24,9 +24,29 @@ engine = create_engine(
     connect_args={
         "connect_timeout": 8,
         "application_name": "sakgaze-api",
-        "options": "-c statement_timeout=8000 -c idle_in_transaction_session_timeout=30000",
     },
 )
+
+
+@event.listens_for(engine, "connect")
+def _apply_session_limits(dbapi_connection, connection_record):  # noqa: ANN001
+    """Bound every session at the SQL level.
+
+    The libpq ``options`` startup parameter is silently ignored by the Supabase
+    transaction pooler (pgbouncer), which is why the previous attempt to set
+    ``statement_timeout`` via ``connect_args`` had no effect and blocked tables
+    hung for minutes. An explicit ``SET`` always reaches the server.
+    """
+    try:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET statement_timeout = '8s'")
+        cursor.execute("SET lock_timeout = '5s'")
+        cursor.execute("SET idle_in_transaction_session_timeout = '30s'")
+        cursor.close()
+    except Exception:  # noqa: BLE001 - never block a connection on tuning
+        pass
+
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -40,25 +60,33 @@ def get_db() -> Generator:
 
 
 def init_db() -> None:
-    """Create tables, PostGIS extension, and spatial GIST indexes.
+    """Optionally create tables/indexes. **DDL is OFF by default.**
 
-    Boot safety: every step is fail-soft. A unreachable/sleeping database must
-    NOT block the API process from starting; the process stays alive and serves
-    /health while data endpoints report degraded.
+    Boot safety + incident safety: running ``ALTER TABLE`` / ``CREATE INDEX``
+    from the API process is what deadlocked the schema in September 2026 (a
+    cancelled run kept an ACCESS EXCLUSIVE lock and every later run queued
+    behind it until the pooler killed it). Schema changes are now applied by an
+    explicit, bounded maintenance step::
+
+        python -m backend.src.db_admin --migrate
+
+    Set ``SAKGAZE_AUTO_MIGRATE=1`` only for throwaway/dev databases.
+    ``create_all`` is still safe (it checks the catalogue and creates missing
+    tables), but it also issues DDL, so it obeys the same switch.
     """
     import logging
-    from sqlalchemy import text
+
+    logger = logging.getLogger("sakgaze.database")
+    if os.getenv("SAKGAZE_AUTO_MIGRATE", "0") not in ("1", "true", "True", "yes"):
+        logger.info("init_db: automatic schema management disabled (SAKGAZE_AUTO_MIGRATE=0)")
+        return
+
     try:
-        with engine.connect() as conn:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
-            conn.commit()
         Base.metadata.create_all(bind=engine)
         _create_spatial_indexes()
         _apply_migrations()
     except Exception as exc:  # noqa: BLE001
-        logging.getLogger("sakgaze.database").warning(
-            "init_db skipped: database not reachable (%s); boot continues without DB schema", exc
-        )
+        logger.warning("init_db skipped: %s; boot continues without schema DDL", exc)
 
 
 def _apply_migrations() -> None:

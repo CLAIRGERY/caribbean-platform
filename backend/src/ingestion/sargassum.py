@@ -3,18 +3,21 @@
 Source: Copernicus Data Space Ecosystem (CDSE) Sentinel-2 L2A STAC catalog.
 - Anonymous STAC search works without credentials.
 - Band streaming + FAI computation requires OAuth2 credentials
-  (CDSE_USERNAME / CDSE_PASSWORD).
+  (CDSE_USERNAME / CDSE_PASSWORD) and S3 keys (CDSE_S3_ACCESS_KEY /
+  CDSE_S3_SECRET_KEY) for s3://eodata asset access.
 
 The Floating Algae Index (FAI) computation and false-positive ML filter are
 reused from ``sakgaze/src/pipeline.py``. When credentials are absent the
-collector returns an empty result and logs a clear warning — it NEVER
-substitutes synthetic/demo data in production.
+collector raises ``MissingCredentials`` — it NEVER returns an empty result that
+would be misreported as "no new observations", and it NEVER substitutes
+synthetic/demo data.
 """
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from backend.src.ingestion import common
+from backend.src.ingestion.errors import MissingCredentials
 
 # CDSE endpoints (environment-overridable)
 CDSE_STAC_URL = os.getenv(
@@ -45,6 +48,20 @@ def fetch_sargassum_detections() -> List[Dict[str, Any]]:
     acquisition_date, source_satellite.
     """
     logger = common.logger
+
+    # Fail fast and explicitly when credentials are missing: an empty result here
+    # would be indistinguishable from a legitimate cloud-free/no-bloom window.
+    if not (CDSE_USERNAME and CDSE_PASSWORD):
+        raise MissingCredentials(
+            "CDSE_USERNAME / CDSE_PASSWORD",
+            "CDSE OAuth2 access for Sentinel-2 band streaming and FAI computation",
+        )
+    if not (CDSE_S3_ACCESS_KEY and CDSE_S3_SECRET_KEY):
+        raise MissingCredentials(
+            "CDSE_S3_ACCESS_KEY / CDSE_S3_SECRET_KEY",
+            "s3://eodata Sentinel-2 band access",
+        )
+
     logger.info("[SARGASSUM] Searching CDSE Sentinel-2 L2A (collection=%s)", COLLECTION)
 
     items = _search_scenes()
@@ -53,21 +70,6 @@ def fetch_sargassum_detections() -> List[Dict[str, Any]]:
 
     if not items:
         logger.warning("[SARGASSUM] No low-cloud scenes found in the AOI window.")
-        return []
-
-    if not (CDSE_USERNAME and CDSE_PASSWORD):
-        logger.warning(
-            "[SARGASSUM] CDSE credentials not configured — cannot stream bands "
-            "or compute FAI. Returning empty result (no synthetic fallback)."
-        )
-        return []
-
-    if not (CDSE_S3_ACCESS_KEY and CDSE_S3_SECRET_KEY):
-        logger.warning(
-            "[SARGASSUM] CDSE S3 credentials (CDSE_S3_ACCESS_KEY/"
-            "CDSE_S3_SECRET_KEY) not configured — cannot stream s3:// band "
-            "assets. Returning empty result (no synthetic fallback)."
-        )
         return []
 
     # Full FAI pipeline on the newest low-cloud scene.
