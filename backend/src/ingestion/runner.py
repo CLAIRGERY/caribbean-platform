@@ -60,6 +60,13 @@ SOURCE_TS_KEY = {"sargassum": "acquisition_date", "drift": "generated_at", "mari
 #: The API keeps its 8 s bound; ingestion sessions raise it, explicitly and boundedly.
 WRITE_STATEMENT_TIMEOUT = os.getenv("INGESTION_STATEMENT_TIMEOUT", "60s")
 
+#: Bounded write batches. One statement per chunk keeps lock time and retry
+#: granularity small (300-row single INSERT timed out on 2026-10-24).
+WRITE_CHUNK_SIZE = int(os.getenv("INGESTION_WRITE_CHUNK", "100"))
+#: Idempotent writes make a single retry on a transient DB error safe.
+WRITE_MAX_ATTEMPTS = int(os.getenv("INGESTION_WRITE_ATTEMPTS", "2"))
+WRITE_RETRY_DELAY_SECONDS = float(os.getenv("INGESTION_WRITE_RETRY_DELAY", "10"))
+
 
 # ---------------------------------------------------------------------------
 # Per-source execution
@@ -190,16 +197,16 @@ def run_source(source: str, *, dry_run: bool = False) -> Dict[str, Any]:
         from backend.src import crud
         from backend.src.database import SessionLocal
 
+        from sqlalchemy import text as _sql
+
         ingester = getattr(crud, ingester_name)
         db = SessionLocal()
         try:
-            from sqlalchemy import text as _sql
-
             # Batch write bound: the API keeps 8 s, ingestion needs more headroom
             # but stays explicitly bounded (no unbounded statement).
             db.execute(_sql(f"SET statement_timeout = '{WRITE_STATEMENT_TIMEOUT}'"))
             db.execute(_sql("SET lock_timeout = '5s'"))
-            result = ingester(db, valid)
+            result = _write_in_chunks(db, ingester, valid, label=label, logger=logger)
         finally:
             db.close()
     except Exception as exc:  # noqa: BLE001
@@ -248,6 +255,50 @@ def run_source(source: str, *, dry_run: bool = False) -> Dict[str, Any]:
         latest_data_timestamp=_iso(latest_ts),
         duration_s=round(time.time() - started, 1),
     )
+
+
+def _write_in_chunks(db, ingester, features, *, label: str, logger) -> Dict[str, Any]:
+    """Write features in bounded chunks, with ONE retry on a transient DB error.
+
+    Run 40106574056 showed why: a single 300-row INSERT of drift corridors hit the
+    60 s statement timeout while the two other sources succeeded. One huge
+    statement means one huge lock and one huge retry unit; chunks of
+    ``INGESTION_WRITE_CHUNK`` rows keep every statement short.
+
+    Writes are idempotent by ``external_id``, so retrying a chunk can never
+    duplicate a row — that is what makes a retry safe here (and only here).
+    """
+    totals = {"inserted": 0, "skipped": 0, "rejected": 0}
+    total = len(features)
+    chunks = [features[i:i + WRITE_CHUNK_SIZE] for i in range(0, total, WRITE_CHUNK_SIZE)]
+    for index, chunk in enumerate(chunks, start=1):
+        started = time.time()
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                result = ingester(db, chunk)
+                break
+            except Exception as exc:  # noqa: BLE001
+                cls = classify_exception(exc)
+                transient = cls in (ErrorClass.DATABASE_UNAVAILABLE, ErrorClass.NETWORK_TIMEOUT)
+                if attempt > WRITE_MAX_ATTEMPTS or not transient:
+                    raise
+                db.rollback()
+                logger.warning(
+                    "[%s] chunk %d/%d failed (%s); retrying in %.0fs (attempt %d/%d)",
+                    label, index, len(chunks), cls.value, WRITE_RETRY_DELAY_SECONDS,
+                    attempt, WRITE_MAX_ATTEMPTS,
+                )
+                time.sleep(WRITE_RETRY_DELAY_SECONDS)
+        for key in totals:
+            totals[key] += int(result.get(key, 0))
+        logger.info(
+            "[%s] chunk %d/%d: %d rows, inserted=%d skipped=%d (%.1fs)",
+            label, index, len(chunks), len(chunk), int(result.get("inserted", 0)),
+            int(result.get("skipped", 0)), time.time() - started,
+        )
+    return totals
 
 
 def _iso(value: Optional[datetime]) -> Optional[str]:
