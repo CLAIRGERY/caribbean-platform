@@ -137,6 +137,8 @@ no database writes):
 |---|---|---|---|
 | `40101224907` | `f333341` | failure, exit 11, 90 s | **DDL deadlock gone** — run reached CDSE, obtained an OAuth token (HTTP 200), streamed bands, vectorised **153 sargassum polygons in 44 s**; then `CONFIGURATION_ERROR — No module named 'psycopg'` |
 | `40101438202` | `540547b` | failure, exit 12, 4 min 45 s | Driver fixed (SQLAlchemy 2.1 + bare URL resolves to psycopg 3). Database reached, then: sargassum `psycopg2.OperationalError: server didn't return client encoding`; drift `SELECT` and marine `INSERT` `canceling statement due to statement timeout` → classified `DATABASE_UNAVAILABLE` |
+| `40106574056` | `7545f0a` | failure 12 — first run of the installed workflow: preflight ok, DDL 0/12, sargassum 153 deduped, marine 7 inserted, **drift** single 300-row INSERT timed out (gate correctly red) |
+| **`40107500779`** | **`180fb48`** | **SUCCESS** — chunked writes: sargassum 153 skipped, **drift 300 inserted (3 chunks)**, marine 1 inserted / 7 skipped |
 | `40101891775` | `02d1a52` | see `state/PROJECT_STATE.md` | adds a read-only DB preflight (server version + lock blockers) and a bounded 60 s batch statement timeout |
 
 Interpretation of run `40101438202`: acquisition and processing are healthy end-to-end
@@ -146,38 +148,44 @@ feed, Open-Meteo marine/wind). The remaining failure is on the **database side o
 is exactly the class the product must report rather than mask. The preflight added in
 `02d1a52` names the cause (paused project vs. stale lock holder) in the CI log.
 
-## 6. Verification NOT yet performed
+## 6. Integration — workflow installed and verified (2026-10-24)
 
-**A real GitHub Actions run of the corrected workflow has not been executed.**
-`git push` of `.github/workflows/sakgaze-ingestion.yml` is rejected with:
+The `workflow` OAuth scope was granted via the device flow, and the corrected workflow is now
+the file GitHub executes: `fix(ci): install the corrected ingestion workflow` (`7545f0a`),
+verified byte-identical to `infrastructure/github-actions/sakgaze-ingestion.yml` through the
+contents API. A contract test (`test_live_workflow_matches_the_template`) keeps the two in sync.
 
-```
-refusing to allow an OAuth App to create or update workflow
-`.github/workflows/sakgaze-ingestion.yml` without `workflow` scope
-```
+First run of the installed workflow, `40106574056`, is the best evidence the new design works:
+preflight `{"ok": true, "server_version": "17.6", "blockers": []}`, `db_admin` `0 applied /
+12 skipped / 0 failed`, sargassum 153 deduped, marine 7 inserted — and **drift failed** with
+`QueryCanceled: canceling statement due to statement timeout` on a single 300-row INSERT. The
+job ended red with an actionable message instead of a silent green: the gate did its job.
 
-The stored OAuth token has scopes `gist, repo` only. The corrected workflow is therefore
-committed as `infrastructure/github-actions/sakgaze-ingestion.yml` (template) and on the
-local branch `fix/ci-workflow`; installation is documented in
-`infrastructure/github-actions/README.md`.
+Cause and fix (`180fb48`): one huge statement means one huge lock and one huge retry unit.
+Writes are now chunked (`INGESTION_WRITE_CHUNK=100`) with one retry on a *transient*
+`DATABASE_UNAVAILABLE`, which is safe because `external_id` makes every write idempotent.
 
-**Note on the notification storm**: scheduled crons execute the workflow file from `main`,
-which still contains the old runner call. The runner-side fix is already active on
-`feature/sakgaze-next` (green runs `40101891775`, `40102327877`), so the notifications only
-stop once this branch reaches `main` (authorisation required) or the corrected workflow /
-schedule is installed.
-
-Required external action:
-re-authorise GitHub with the **`workflow`** scope (device flow, same client id as
-before), then push the workflow commit and dispatch it:
+Run `40107500779` (same workflow, `180fb48`) — **SUCCESS**, every step green:
 
 ```
-POST /repos/CLAIRGERY/caribbean-platform/actions/workflows/337539264/dispatches
-{"ref": "feature/sakgaze-next", "inputs": {"source": "all"}}
+[DB] preflight: {"ok": true, "server_version": "17.6", "blockers": []}
+DDL applied: 0  skipped: 12  failed: 0
+[SARGASSUM] chunk 1/2: 100 rows, inserted=0 skipped=100 (9.0s)
+[SARGASSUM] chunk 2/2:  53 rows, inserted=0 skipped=53  (3.3s)
+[DRIFT]     chunk 1/3: 100 rows, inserted=100 (13.3s)
+[DRIFT]     chunk 2/3: 100 rows, inserted=100  (8.4s)
+[DRIFT]     chunk 3/3: 100 rows, inserted=100  (5.8s)
+[MARINE]    chunk 1/1:   8 rows, inserted=1 skipped=7 (2.5s)
+overall: SUCCESS
 ```
 
-Until that run is green and the database rows are confirmed, the ingestion
-workflow must be reported as **UNVERIFIED**, not "fixed".
+The same 300 drift rows that previously timed out now land in 27.5 s across three statements.
+
+### What is still open
+Scheduled crons execute the workflow **from `main`**, which still has the old runner. The
+corrected workflow and code are on `feature/sakgaze-next` (PR #1). Until that PR is merged, the
+scheduled signal is not trustworthy and the recurring failures continue — merging is a
+production action that requires explicit authorization.
 
 ## 7. Residual risk register
 
