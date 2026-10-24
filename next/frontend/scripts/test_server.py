@@ -72,7 +72,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if self.path in API_ROUTES:
             self._json(API_ROUTES[self.path])
             return
-        if self.path == "/health":
+        if self.path in ("/health", "/api/v1/health", "/api/v2/health"):
             self._json(HEALTH)
             return
         if self.path.startswith(FIXTURE_PREFIX):

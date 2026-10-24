@@ -91,6 +91,18 @@ def health() -> Dict[str, Any]:
     return {"status": "ok", "service": "sakgaze-api"}
 
 
+@app.get("/api/v1/health", include_in_schema=False)
+def health_v1() -> Dict[str, Any]:
+    """Versioned alias.
+
+    The frontend builds every URL as ``VITE_API_BASE_URL + path`` and calls
+    ``/health``, so with a ``…/api/v1`` base it requests ``/api/v1/health``.
+    Without this alias that probe 404s while the data endpoints work, and the UI
+    reports DEGRADED/offline for a healthy backend.
+    """
+    return health()
+
+
 @app.get("/health/db")
 def health_db(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Optional DB health; bounded by the engine-level statement timeout."""
