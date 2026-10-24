@@ -156,7 +156,18 @@ refusing to allow an OAuth App to create or update workflow
 `.github/workflows/sakgaze-ingestion.yml` without `workflow` scope
 ```
 
-The stored OAuth token has scopes `gist, repo` only. Required external action:
+The stored OAuth token has scopes `gist, repo` only. The corrected workflow is therefore
+committed as `infrastructure/github-actions/sakgaze-ingestion.yml` (template) and on the
+local branch `fix/ci-workflow`; installation is documented in
+`infrastructure/github-actions/README.md`.
+
+**Note on the notification storm**: scheduled crons execute the workflow file from `main`,
+which still contains the old runner call. The runner-side fix is already active on
+`feature/sakgaze-next` (green runs `40101891775`, `40102327877`), so the notifications only
+stop once this branch reaches `main` (authorisation required) or the corrected workflow /
+schedule is installed.
+
+Required external action:
 re-authorise GitHub with the **`workflow`** scope (device flow, same client id as
 before), then push the workflow commit and dispatch it:
 

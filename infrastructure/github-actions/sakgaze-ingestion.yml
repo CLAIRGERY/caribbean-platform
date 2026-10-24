@@ -1,0 +1,145 @@
+name: SaKgaZé Ingestion
+
+# ---------------------------------------------------------------------------
+# Scheduling rationale
+# ---------------------------------------------------------------------------
+# The previous schedule fired 12 full "all sources" runs per day. Sentinel-2
+# revisits the Caribbean every ~5 days, so 12 acquisitions/day bought nothing and
+# multiplied the failure notifications of the 2026-09/10 database-lock incident.
+# Each cron now runs exactly the collector that can have new data:
+#   02:00 & 14:00 UTC -> sargassum (2 runs/day, satellite revisit cadence)
+#   every 6 h @ :30    -> drift forecast refresh (Open-Meteo current cadence)
+#   every 6 h @ :45    -> marine alerts (NOAA NHC / Open-Meteo cadence)
+# => 10 targeted runs/day, never 12 redundant full runs.
+on:
+  schedule:
+    - cron: "0 2,14 * * *"
+    - cron: "30 */6 * * *"
+    - cron: "45 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Collector to run"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - sargassum
+          - drift
+          - marine-alerts
+
+# One ingestion at a time. Never cancel a run in progress: a cancelled run used to
+# leave an ACCESS EXCLUSIVE lock behind, which is exactly how the incident began.
+concurrency:
+  group: sakgaze-ingestion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+  # Bounded DDL: a blocked table fails in seconds instead of hanging for minutes.
+  SAKGAZE_DDL_LOCK_TIMEOUT: "5s"
+  SAKGAZE_DDL_STATEMENT_TIMEOUT: "60s"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CDSE_USERNAME: ${{ secrets.CDSE_USERNAME }}
+      CDSE_PASSWORD: ${{ secrets.CDSE_PASSWORD }}
+      CDSE_S3_ACCESS_KEY: ${{ secrets.CDSE_S3_ACCESS_KEY }}
+      CDSE_S3_SECRET_KEY: ${{ secrets.CDSE_S3_SECRET_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Resolve collector from schedule
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="${{ github.event.inputs.source }}"
+          if [ -z "${src}" ]; then
+            case "${{ github.event.schedule }}" in
+              "0 2,14 * * *")  src="sargassum" ;;
+              "30 */6 * * *")  src="drift" ;;
+              "45 */6 * * *")  src="marine-alerts" ;;
+              *)               src="all" ;;
+            esac
+          fi
+          echo "source=${src}" >> "$GITHUB_OUTPUT"
+          echo "Collector: \`${src}\` (trigger: ${{ github.event_name }} ${{ github.event.schedule }})"
+
+      # Schema changes are a separate, explicit, bounded operation — never part of
+      # the ingestion code path. This step also unblocks a table left locked by an
+      # earlier cancelled run (the root cause of the 2026-09/10 failures).
+      - name: Database maintenance (inspect, unblock, additive migration)
+        timeout-minutes: 5
+        run: python -m backend.src.db_admin --inspect --terminate-blockers --migrate --github-summary
+
+      - name: Run ingestion
+        id: ingest
+        shell: bash
+        # The runner classifies its own outcome; this step never fails so the gate
+        # below can report a precise, human-readable reason in one place.
+        run: |
+          set +e
+          python -m backend.src.ingestion.runner \
+            --source "${{ steps.plan.outputs.source }}" \
+            --json --github-summary
+          code=$?
+          echo "exit=${code}" >> "$GITHUB_OUTPUT"
+          echo "Ingestion exit code: ${code}"
+          exit 0
+
+      - name: Enforce ingestion outcome
+        if: always()
+        shell: bash
+        env:
+          CODE: ${{ steps.ingest.outputs.exit }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CODE}" ]; then
+            echo "::error title=Ingestion did not run::The ingestion step produced no exit code (job aborted earlier)."
+            exit 1
+          fi
+          case "${CODE}" in
+            0)  echo "::notice title=Ingestion OK::success / no_new_data / partial_success"; exit 0 ;;
+            10) echo "::error title=Ingestion AUTHENTICATION_ERROR::Copernicus/CDSE rejected the configured credentials. Rotate CDSE_USERNAME, CDSE_PASSWORD and the S3 keys. Automatic retries cannot succeed until then."; exit 1 ;;
+            11) echo "::error title=Ingestion CONFIGURATION_ERROR::A required environment variable or credential is missing. See the step summary."; exit 1 ;;
+            12) echo "::error title=Ingestion DATABASE_UNAVAILABLE::The database refused the write (lock, timeout or connectivity). Run backend/src/db_admin.py --inspect --terminate-blockers."; exit 1 ;;
+            13) echo "::error title=Ingestion INVALID_SCIENTIFIC_DATA::Upstream data failed validation; nothing was written."; exit 1 ;;
+            2*) echo "::error title=Ingestion upstream/transient failure::Retryable upstream problem (unavailable, rate limited, timeout or processing)."; exit 1 ;;
+            *)  echo "::error title=Ingestion UNKNOWN_ERROR::Unclassified failure, see the log above."; exit 1 ;;
+          esac
+
+      - name: Incident summary on failure
+        if: failure()
+        shell: bash
+        run: |
+          {
+            echo ""
+            echo "---"
+            echo "### Run metadata"
+            echo "- trigger: \`${{ github.event_name }}\` (\`${{ github.event.schedule }}\`)"
+            echo "- collector: \`${{ steps.plan.outputs.source }}\`"
+            echo "- ingestion exit code: \`${{ steps.ingest.outputs.exit }}\`"
+            echo "- commit: \`${{ github.sha }}\`"
+            echo "- This workflow does **not** retry on its own. Credential and schema"
+            echo "  problems are never retried automatically; transient upstream failures"
+            echo "  are picked up by the next scheduled run."
+          } >> "$GITHUB_STEP_SUMMARY"
